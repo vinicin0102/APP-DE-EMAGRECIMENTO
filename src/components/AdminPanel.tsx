@@ -73,9 +73,12 @@ export default function AdminPanel() {
     const [editingItem, setEditingItem] = useState<any>(null)
 
     // Forms
-    const [challengeForm, setChallengeForm] = useState({
+    const [challengeForm, setChallengeForm] = useState<{
+        title: string; description: string; emoji: string; color: string;
+        duration_days: number; difficulty: 'Fácil' | 'Intermediário' | 'Avançado'; reward_points: number;
+    }>({
         title: '', description: '', emoji: '🎯', color: '#00C853',
-        duration_days: 7, difficulty: 'Fácil' as const, reward_points: 100
+        duration_days: 7, difficulty: 'Fácil', reward_points: 100
     })
     const [lessonForm, setLessonForm] = useState({
         title: '', description: '', duration: '15 min', thumbnail: '📚',
