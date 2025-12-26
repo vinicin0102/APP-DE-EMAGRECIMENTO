@@ -193,7 +193,6 @@ export default function Feed() {
             <header className="page-header">
                 <div className="feed-header">
                     <h1>Slim<span className="gradient-text">Fit</span></h1>
-                    <button className="notification-btn">🔔</button>
                 </div>
             </header>
 
