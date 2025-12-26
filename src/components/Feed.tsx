@@ -22,7 +22,6 @@ export default function Feed() {
     const [posting, setPosting] = useState(false)
     const [localLikes, setLocalLikes] = useState<Record<string, boolean>>({})
     const [postExtras, setPostExtras] = useState<Record<string, PostWithComments>>({})
-    const [selectedStory, setSelectedStory] = useState<string | null>(null)
 
     // Dados estáticos de exemplo
     const staticPosts = [
@@ -59,15 +58,6 @@ export default function Feed() {
             created_at: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
             user: { id: '3', name: 'Roberto Lima', email: 'r@email.com', points: 3200, streak_days: 67, created_at: '', updated_at: '' }
         },
-    ]
-
-    const stories = [
-        { id: 'add', name: 'Novo', avatar: '+', color: 'transparent', isAdd: true },
-        { id: '1', name: 'Marina', avatar: 'M', color: '#FF4081', content: 'Hoje foi dia de treino pesado! 💪🔥' },
-        { id: '2', name: 'João', avatar: 'J', color: '#2979FF', content: 'Receita fit do jantar de hoje 🥗' },
-        { id: '3', name: 'Ana', avatar: 'A', color: '#7C4DFF', content: '21 dias de streak! 🎉' },
-        { id: '4', name: 'Carlos', avatar: 'C', color: '#00C853', content: 'Meta da semana atingida ✅' },
-        { id: '5', name: 'Julia', avatar: 'J', color: '#FF6D00', content: '-3kg este mês! 📉' },
     ]
 
     const displayPosts = posts.length > 0 ? posts : staticPosts
@@ -208,48 +198,6 @@ export default function Feed() {
             </header>
 
             <div className="page-container">
-                {/* Stories */}
-                <div className="stories-container">
-                    {stories.map((story) => (
-                        <div
-                            key={story.id}
-                            className={`story ${story.isAdd ? 'add-story' : ''}`}
-                            onClick={() => !story.isAdd && setSelectedStory(story.id)}
-                        >
-                            <div
-                                className="story-avatar"
-                                style={{ background: story.isAdd ? 'var(--bg-glass)' : story.color }}
-                            >
-                                {story.avatar}
-                            </div>
-                            <span>{story.name}</span>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Story Viewer Modal */}
-                {selectedStory && (
-                    <div className="story-modal" onClick={() => setSelectedStory(null)}>
-                        <div className="story-content" onClick={e => e.stopPropagation()}>
-                            <div className="story-progress">
-                                <div className="story-progress-bar" />
-                            </div>
-                            <div className="story-header">
-                                <div
-                                    className="story-avatar-small"
-                                    style={{ background: stories.find(s => s.id === selectedStory)?.color }}
-                                >
-                                    {stories.find(s => s.id === selectedStory)?.avatar}
-                                </div>
-                                <span>{stories.find(s => s.id === selectedStory)?.name}</span>
-                                <button className="close-story" onClick={() => setSelectedStory(null)}>×</button>
-                            </div>
-                            <div className="story-body">
-                                <p>{stories.find(s => s.id === selectedStory)?.content}</p>
-                            </div>
-                        </div>
-                    </div>
-                )}
 
                 {/* Criar Post */}
                 <div className="create-post-card">
