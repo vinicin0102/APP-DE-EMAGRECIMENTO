@@ -11,11 +11,16 @@ import AIAssistant from './components/AIAssistant'
 import ChallengesPage from './components/ChallengesPage'
 import ProfilePage from './components/ProfilePage'
 import Support from './components/Support'
+import AdminPanel from './components/AdminPanel'
+
+const ADMIN_EMAIL = 'admin@gmail.com'
 
 function App() {
   const [activeTab, setActiveTab] = useState('feed')
   const [showAuth, setShowAuth] = useState(false)
-  const { user, loading } = useAuth()
+  const { user, profile, loading } = useAuth()
+
+  const isAdmin = profile?.email === ADMIN_EMAIL
 
   if (loading) {
     return (
@@ -79,8 +84,9 @@ function App() {
         {activeTab === 'challenges' && <ChallengesPage />}
         {activeTab === 'profile' && <ProfilePage />}
         {activeTab === 'support' && <Support />}
+        {activeTab === 'admin' && <AdminPanel />}
       </main>
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
+      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
     </div>
   )
 }
