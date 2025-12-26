@@ -211,6 +211,25 @@
     font-size: 4rem;
 }
 
+.video-placeholder>p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Video Embed */
+.video-embed {
+    aspect-ratio: 16/9;
+    width: 100%;
+    background: #000;
+}
+
+.video-embed iframe,
+.video-embed video {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
 .play-btn {
     width: 60px;
     height: 60px;

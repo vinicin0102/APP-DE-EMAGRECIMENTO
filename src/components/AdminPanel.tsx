@@ -715,7 +715,16 @@ export default function AdminPanel() {
                                     </div>
                                     <div className="form-group"><label>Ordem</label><input type="number" value={lessonForm.order} onChange={e => setLessonForm({ ...lessonForm, order: parseInt(e.target.value) || 1 })} /></div>
                                 </div>
-                                <div className="form-group"><label>URL do Vídeo (opcional)</label><input value={lessonForm.videoUrl} onChange={e => setLessonForm({ ...lessonForm, videoUrl: e.target.value })} placeholder="https://..." /></div>
+                                <div className="form-group">
+                                    <label>Código Embed do Vídeo (iframe)</label>
+                                    <textarea
+                                        value={lessonForm.videoUrl}
+                                        onChange={e => setLessonForm({ ...lessonForm, videoUrl: e.target.value })}
+                                        placeholder='<iframe src="https://..." ...></iframe>'
+                                        rows={4}
+                                    />
+                                    <span className="form-hint">Cole o código embed do YouTube, Vimeo, etc.</span>
+                                </div>
                                 <button className="btn-primary btn-save" onClick={saveLesson}>💾 Salvar</button>
                             </>
                         )}

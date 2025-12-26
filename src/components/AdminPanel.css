@@ -773,6 +773,13 @@
     gap: var(--spacing-md);
 }
 
+.form-hint {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .stats-grid-admin {
