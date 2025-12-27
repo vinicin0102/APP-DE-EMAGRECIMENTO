@@ -253,12 +253,22 @@
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
 }
 
-.stat-icon-profile {
-    font-size: 2.5rem;
+.stat-icon-svg-profile {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
     transition: transform 0.3s ease;
 }
 
-.stat-card-profile:hover .stat-icon-profile {
+.stat-icon-svg-profile svg {
+    width: 100%;
+    height: 100%;
+}
+
+.stat-card-profile:hover .stat-icon-svg-profile {
     transform: scale(1.15);
 }
 
@@ -425,8 +435,29 @@
     box-shadow: 0 5px 20px rgba(0, 200, 83, 0.15);
 }
 
-.achievement span:first-child {
-    font-size: 1.3rem;
+.achievement-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.achievement-icon.unlocked {
+    background: var(--primary-gradient);
+    border: none;
+    position: relative;
+}
+
+.achievement-icon.unlocked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
 }
 
 .achievement.locked {
@@ -439,6 +470,16 @@
 .achievement.locked:hover {
     transform: none;
     box-shadow: none;
+}
+
+/* Empty State Icon */
+.empty-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto var(--spacing-lg);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px dashed rgba(255, 255, 255, 0.15);
 }
 
 /* Weight Section */

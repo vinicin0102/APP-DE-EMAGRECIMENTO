@@ -61,8 +61,8 @@ export default function ProfilePage() {
                     <h2>{profile?.name || 'Usuário'}</h2>
                     <p>{profile?.email}</p>
                     <div className="profile-badges-row">
-                        <span className="badge-pill">🔥 {profile?.streak_days || 0} dias</span>
-                        <span className="badge-pill">⭐ {profile?.points || 0} pts</span>
+                        <span className="badge-pill">{profile?.streak_days || 0} dias de sequência</span>
+                        <span className="badge-pill">{profile?.points || 0} pontos</span>
                     </div>
                 </div>
 
@@ -72,19 +72,19 @@ export default function ProfilePage() {
                         className={`section-tab ${activeSection === 'overview' ? 'active' : ''}`}
                         onClick={() => setActiveSection('overview')}
                     >
-                        📊 Visão Geral
+                        Visão Geral
                     </button>
                     <button
                         className={`section-tab ${activeSection === 'weight' ? 'active' : ''}`}
                         onClick={() => setActiveSection('weight')}
                     >
-                        ⚖️ Peso
+                        Peso
                     </button>
                     <button
                         className={`section-tab ${activeSection === 'settings' ? 'active' : ''}`}
                         onClick={() => setActiveSection('settings')}
                     >
-                        ⚙️ Config
+                        Configurações
                     </button>
                 </div>
 
@@ -93,7 +93,12 @@ export default function ProfilePage() {
                     <div className="section-content">
                         <div className="stats-grid-profile">
                             <div className="stat-card-profile" onClick={() => setShowWeightModal(true)}>
-                                <span className="stat-icon-profile">⚖️</span>
+                                <div className="stat-icon-svg-profile">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707" />
+                                        <circle cx="12" cy="12" r="4" />
+                                    </svg>
+                                </div>
                                 <div className="stat-content-profile">
                                     <span className="stat-label-profile">Peso Atual</span>
                                     <span className="stat-value-profile">
@@ -108,7 +113,12 @@ export default function ProfilePage() {
                             </div>
 
                             <div className="stat-card-profile">
-                                <span className="stat-icon-profile">🎯</span>
+                                <div className="stat-icon-svg-profile">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <circle cx="12" cy="12" r="10" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg>
+                                </div>
                                 <div className="stat-content-profile">
                                     <span className="stat-label-profile">Meta</span>
                                     <span className="stat-value-profile">
@@ -128,28 +138,28 @@ export default function ProfilePage() {
                                     <div className="progress-fill" style={{ width: `${Math.max(0, 100 - progress)}%` }} />
                                 </div>
                                 <p className="progress-message">
-                                    Faltam {(profile.current_weight - profile.weight_goal).toFixed(1)} kg para sua meta! 💪
+                                    Faltam {(profile.current_weight - profile.weight_goal).toFixed(1)} kg para sua meta!
                                 </p>
                             </div>
                         )}
 
                         <div className="achievements-card">
-                            <h3>🏆 Conquistas</h3>
+                            <h3>Conquistas</h3>
                             <div className="achievements-grid">
                                 <div className="achievement">
-                                    <span>🌟</span>
+                                    <div className="achievement-icon unlocked"></div>
                                     <span>Primeira Semana</span>
                                 </div>
                                 <div className="achievement">
-                                    <span>💪</span>
+                                    <div className="achievement-icon unlocked"></div>
                                     <span>10 Desafios</span>
                                 </div>
                                 <div className="achievement locked">
-                                    <span>🔒</span>
+                                    <div className="achievement-icon"></div>
                                     <span>Meta Atingida</span>
                                 </div>
                                 <div className="achievement locked">
-                                    <span>🔒</span>
+                                    <div className="achievement-icon"></div>
                                     <span>30 Dias</span>
                                 </div>
                             </div>
@@ -166,7 +176,7 @@ export default function ProfilePage() {
 
                         {logs.length > 0 ? (
                             <div className="weight-history-card">
-                                <h3>📈 Histórico</h3>
+                                <h3>Histórico de Peso</h3>
                                 <div className="weight-list">
                                     {logs.map((log, index) => (
                                         <div key={log.id} className="weight-item">
@@ -189,7 +199,7 @@ export default function ProfilePage() {
                             </div>
                         ) : (
                             <div className="empty-state">
-                                <span>📊</span>
+                                <div className="empty-icon"></div>
                                 <p>Nenhum registro de peso ainda</p>
                                 <p className="empty-hint">Registre seu peso para acompanhar sua evolução</p>
                             </div>
@@ -201,7 +211,7 @@ export default function ProfilePage() {
                 {activeSection === 'settings' && (
                     <div className="section-content">
                         <div className="settings-card">
-                            <h3>👤 Informações Pessoais</h3>
+                            <h3>Informações Pessoais</h3>
 
                             {editing ? (
                                 <div className="edit-form">
@@ -252,7 +262,7 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="settings-card">
-                            <h3>🔔 Notificações</h3>
+                            <h3>Notificações</h3>
                             <div className="toggle-row">
                                 <span>Lembretes diários</span>
                                 <div className="toggle active"></div>

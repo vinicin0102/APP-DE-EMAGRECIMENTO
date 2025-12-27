@@ -51,9 +51,27 @@
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
-.challenge-stat-card .stat-icon {
-    font-size: 1.6rem;
+.challenge-stat-card .stat-icon-svg {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary-color);
     animation: iconBounce 3s ease-in-out infinite;
+}
+
+.challenge-stat-card .stat-icon-svg svg {
+    width: 100%;
+    height: 100%;
+}
+
+.challenge-stat-card .stat-icon-svg.completed {
+    color: #00C853;
+}
+
+.challenge-stat-card .stat-icon-svg.points {
+    color: #FFD700;
 }
 
 @keyframes iconBounce {

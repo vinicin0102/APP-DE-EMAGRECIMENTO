@@ -376,12 +376,11 @@
     background: rgba(255, 64, 129, 0.1);
 }
 
-.action-btn span:first-child {
-    font-size: 1.2rem;
+.action-btn svg {
     transition: transform 0.3s ease;
 }
 
-.action-btn:hover span:first-child {
+.action-btn:hover svg {
     transform: scale(1.15);
 }
 
@@ -522,10 +521,13 @@
     color: var(--text-muted);
 }
 
-.loading-posts span {
-    font-size: 3rem;
-    display: block;
-    margin-bottom: var(--spacing-md);
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    margin: 0 auto var(--spacing-md);
     animation: spin 1s linear infinite;
 }
 

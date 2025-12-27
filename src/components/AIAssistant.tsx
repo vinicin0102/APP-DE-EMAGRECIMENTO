@@ -9,12 +9,12 @@ interface Message {
 }
 
 const suggestions = [
-    '🍽️ Monte uma dieta para mim',
-    '💪 Sugira um treino iniciante',
-    '🧘 Dicas para controlar ansiedade',
-    '🥗 Receitas fit fáceis',
-    '📊 Como calcular meu IMC?',
-    '⏰ Dicas de jejum intermitente',
+    'Monte uma dieta personalizada',
+    'Sugira um treino para iniciantes',
+    'Dicas para controlar a ansiedade',
+    'Receitas fit rápidas e fáceis',
+    'Como calcular meu IMC?',
+    'Dicas de jejum intermitente',
 ]
 
 export default function AIAssistant() {
@@ -22,7 +22,7 @@ export default function AIAssistant() {
         {
             id: '1',
             role: 'assistant',
-            content: 'Olá! 👋 Eu sou a Nutri IA, sua assistente pessoal de emagrecimento. Como posso ajudar você hoje?\n\nPosso ajudar com:\n• 🍽️ Dicas de alimentação\n• 💪 Sugestões de exercícios\n• 📊 Análise do seu progresso\n• 🧘 Dicas de bem-estar\n• 🎯 Estratégias para atingir suas metas',
+            content: 'Olá! Eu sou a Nutri IA, sua assistente pessoal de emagrecimento. Como posso ajudar você hoje?\n\nPosso ajudar com:\n• Dicas de alimentação saudável\n• Sugestões de exercícios\n• Análise do seu progresso\n• Dicas de bem-estar mental\n• Estratégias para atingir suas metas',
             timestamp: new Date()
         }
     ])
