@@ -1,225 +1,429 @@
+/* ================================================
+   LESSONS PAGE - DESIGN ULTRA PREMIUM
+   (Backup - O MemberArea.css é o principal)
+   ================================================ */
+
 .lessons-page {
     min-height: 100vh;
+    background: linear-gradient(180deg, #0a0a0a 0%, #0d0d0d 100%);
+    position: relative;
 }
 
-/* Progress Card */
-.progress-card {
-    background: var(--primary-gradient);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
-    margin-bottom: var(--spacing-lg);
-}
-
-.progress-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: var(--spacing-sm);
-}
-
-.progress-label {
-    font-weight: 500;
-}
-
-.progress-value {
-    font-weight: 700;
-}
-
-.progress-card .progress-bar {
-    height: 8px;
-    background: rgba(255, 255, 255, 0.3);
-    border-radius: 4px;
+/* Progress Card Premium */
+.progress-card-lessons {
+    background: linear-gradient(135deg, rgba(0, 200, 83, 0.08) 0%, rgba(255, 64, 129, 0.05) 50%, rgba(124, 77, 255, 0.05) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-2xl);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-2xl);
+    position: relative;
     overflow: hidden;
 }
 
-.progress-card .progress-fill {
+.progress-card-lessons::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 100%;
     height: 100%;
-    background: white;
-    border-radius: 4px;
-    transition: width 0.5s ease;
+    background: radial-gradient(circle, rgba(0, 200, 83, 0.1) 0%, transparent 50%);
+    animation: cardGlow 8s ease-in-out infinite;
 }
 
-/* Categories */
-.categories-scroll {
+@keyframes cardGlow {
+
+    0%,
+    100% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(-20%, 20%);
+    }
+}
+
+.progress-header-lessons {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--spacing-lg);
+    position: relative;
+}
+
+.progress-info h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xs);
+}
+
+.progress-info p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.progress-circle {
+    width: 70px;
+    height: 70px;
+    position: relative;
+}
+
+.progress-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.progress-circle .circle-bg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 6;
+}
+
+.progress-circle .circle-fill {
+    fill: none;
+    stroke: url(#progressGradient);
+    stroke-width: 6;
+    stroke-linecap: round;
+    transition: stroke-dasharray 1s ease;
+}
+
+.progress-percentage {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 1rem;
+    font-weight: 700;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.progress-bar-lessons {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: var(--spacing-sm);
+    position: relative;
+}
+
+.progress-bar-lessons .progress-fill {
+    height: 100%;
+    background: var(--primary-gradient);
+    border-radius: 4px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    box-shadow: 0 0 15px rgba(0, 200, 83, 0.4);
+}
+
+.progress-bar-lessons .progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    from {
+        transform: translateX(-100%);
+    }
+
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.progress-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    position: relative;
+}
+
+/* Category Buttons Premium */
+.category-buttons {
     display: flex;
     gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xl);
     overflow-x: auto;
-    padding-bottom: var(--spacing-md);
-    margin-bottom: var(--spacing-md);
-    -webkit-overflow-scrolling: touch;
+    padding-bottom: var(--spacing-sm);
+    scrollbar-width: none;
 }
 
-.categories-scroll::-webkit-scrollbar {
+.category-buttons::-webkit-scrollbar {
     display: none;
 }
 
 .category-btn {
-    background: var(--bg-glass);
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    padding: var(--spacing-sm) var(--spacing-lg);
     border-radius: var(--radius-full);
-    white-space: nowrap;
     cursor: pointer;
     font-size: 0.9rem;
-    transition: all var(--transition-normal);
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.category-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--primary-gradient);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.category-btn span {
+    position: relative;
+    z-index: 1;
+}
+
+.category-btn:hover {
+    color: var(--text-primary);
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .category-btn.active {
-    background: var(--primary-gradient);
-    border-color: transparent;
     color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 15px rgba(0, 200, 83, 0.25);
 }
 
-/* Lessons Grid */
+.category-btn.active::before {
+    opacity: 1;
+}
+
+/* Lessons Grid Premium */
 .lessons-grid {
     display: flex;
     flex-direction: column;
     gap: var(--spacing-md);
 }
 
+/* Lesson Card Premium */
 .lesson-card {
-    background: var(--bg-glass);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
     display: flex;
     gap: var(--spacing-md);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-xl);
     padding: var(--spacing-md);
     cursor: pointer;
-    transition: all var(--transition-normal);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: cardFadeIn 0.5s ease both;
+}
+
+@keyframes cardFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .lesson-card:hover {
-    border-color: var(--primary-color);
-    transform: translateX(4px);
+    transform: translateX(8px);
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
 }
 
-.lesson-card.locked {
-    opacity: 0.6;
-    cursor: not-allowed;
+.lesson-card.completed {
+    border-color: rgba(0, 200, 83, 0.2);
 }
 
-.lesson-card.locked:hover {
-    transform: none;
-    border-color: var(--border-color);
+.lesson-card.completed::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--primary-gradient);
 }
 
 .lesson-thumbnail {
-    width: 80px;
-    height: 80px;
-    border-radius: var(--radius-md);
-    background: linear-gradient(135deg, rgba(0, 200, 83, 0.2), rgba(255, 64, 129, 0.2));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
+    width: 100px;
+    height: 70px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
     flex-shrink: 0;
     position: relative;
 }
 
-.completed-badge,
-.locked-badge {
+.lesson-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.lesson-card:hover .lesson-thumbnail img {
+    transform: scale(1.1);
+}
+
+.lesson-thumbnail .play-icon {
     position: absolute;
-    top: -5px;
-    right: -5px;
-    width: 24px;
-    height: 24px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
-.completed-badge {
-    background: var(--primary-color);
-    color: white;
-}
-
-.locked-badge {
-    background: var(--bg-dark);
-    border: 1px solid var(--border-color);
+.lesson-card:hover .play-icon {
+    opacity: 1;
 }
 
 .lesson-info {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     min-width: 0;
 }
 
-.lesson-category {
-    font-size: 0.75rem;
-    color: var(--primary-color);
-    font-weight: 500;
-    text-transform: uppercase;
-}
-
-.lesson-info h3 {
-    font-size: 1rem;
+.lesson-info h4 {
+    font-size: 0.95rem;
     font-weight: 600;
-    margin: 4px 0;
+    margin-bottom: 4px;
+    color: white;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
 .lesson-info p {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-bottom: var(--spacing-xs);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.lesson-duration {
     font-size: 0.8rem;
     color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
 }
 
-/* Lesson Modal */
-.lesson-modal {
+.lesson-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.completed-check {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #00C853, #00E676);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.8rem;
+    box-shadow: 0 4px 15px rgba(0, 200, 83, 0.3);
+}
+
+/* Video Modal Premium */
+.video-modal {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.9);
+    background: rgba(0, 0, 0, 0.95);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 2000;
-    padding: var(--spacing-md);
+    padding: var(--spacing-lg);
+    animation: fadeIn 0.3s ease;
+    backdrop-filter: blur(15px);
 }
 
-.lesson-modal-content {
-    background: var(--bg-dark);
-    border-radius: var(--radius-xl);
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.video-modal-content {
+    background: linear-gradient(180deg, #0f0f0f 0%, #000 100%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--radius-2xl);
     width: 100%;
-    max-width: 500px;
+    max-width: 900px;
     overflow: hidden;
-    position: relative;
+    animation: modalSlide 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.video-placeholder {
-    aspect-ratio: 16/9;
-    background: linear-gradient(135deg, rgba(0, 200, 83, 0.3), rgba(255, 64, 129, 0.3));
+@keyframes modalSlide {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.video-modal-header {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-lg);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.video-modal-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.close-video {
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.3rem;
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--spacing-md);
+    transition: all 0.3s ease;
 }
 
-.video-placeholder>span {
-    font-size: 4rem;
+.close-video:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: rotate(90deg);
 }
 
-.video-placeholder>p {
-    color: var(--text-muted);
-    font-size: 0.9rem;
-}
-
-/* Video Embed */
 .video-embed {
-    aspect-ratio: 16/9;
     width: 100%;
+    aspect-ratio: 16/9;
     background: #000;
 }
 
@@ -230,52 +434,72 @@
     border: none;
 }
 
-.play-btn {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: white;
-    border: none;
-    font-size: 1.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    transition: transform var(--transition-normal);
-}
-
-.play-btn:hover {
-    transform: scale(1.1);
-}
-
-.lesson-modal-info {
+.video-modal-info {
     padding: var(--spacing-xl);
 }
 
-.lesson-modal-info h2 {
-    font-size: 1.25rem;
-    margin: var(--spacing-sm) 0;
-}
-
-.lesson-modal-info p {
+.video-modal-info p {
     color: var(--text-secondary);
-    margin-bottom: var(--spacing-md);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-lg);
 }
 
-.lesson-meta {
-    display: flex;
-    gap: var(--spacing-md);
-    margin-bottom: var(--spacing-lg);
-    font-size: 0.9rem;
+.btn-mark-complete {
+    width: 100%;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    padding: var(--spacing-md);
+    border-radius: var(--radius-full);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0, 200, 83, 0.3);
+}
+
+.btn-mark-complete:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 200, 83, 0.4);
+}
+
+/* Loading */
+.loading-lessons {
+    text-align: center;
+    padding: var(--spacing-3xl);
     color: var(--text-muted);
 }
 
-.completed-tag {
-    color: var(--primary-color);
-    font-weight: 500;
+.loading-lessons span {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: var(--spacing-md);
+    animation: spin 1s linear infinite;
 }
 
-.btn-start-lesson {
-    width: 100%;
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .lesson-thumbnail {
+        width: 80px;
+        height: 55px;
+    }
+
+    .lesson-info h4 {
+        font-size: 0.9rem;
+    }
+
+    .progress-circle {
+        width: 55px;
+        height: 55px;
+    }
 }
