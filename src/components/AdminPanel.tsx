@@ -6,14 +6,26 @@ import './AdminPanel.css'
 
 const ADMIN_EMAIL = 'admin@gmail.com'
 
+// Interfaces
 interface Lesson {
     id: string
     title: string
     description: string
     duration: string
     thumbnail: string
-    category: string
     videoUrl: string
+    order: number
+    completed?: boolean
+    locked?: boolean
+}
+
+interface Module {
+    id: string
+    title: string
+    description: string
+    thumbnail: string
+    color: string
+    lessons: Lesson[]
     order: number
 }
 
@@ -23,6 +35,9 @@ interface AppSettings {
     welcomeSubtitle: string
     primaryColor: string
     secondaryColor: string
+    heroBannerImage: string
+    heroTitle: string
+    heroSubtitle: string
 }
 
 interface AIResponse {
@@ -31,13 +46,31 @@ interface AIResponse {
     response: string
 }
 
-const defaultLessons: Lesson[] = [
-    { id: '1', title: 'Introdução ao Emagrecimento', description: 'Aprenda os fundamentos', duration: '15 min', thumbnail: '🎯', category: 'Fundamentos', videoUrl: '', order: 1 },
-    { id: '2', title: 'Déficit Calórico', description: 'Como funciona a perda de peso', duration: '20 min', thumbnail: '📊', category: 'Fundamentos', videoUrl: '', order: 2 },
-    { id: '3', title: 'Montando seu Prato', description: 'Equilibrando macros', duration: '25 min', thumbnail: '🍽️', category: 'Nutrição', videoUrl: '', order: 3 },
-    { id: '4', title: 'Jejum Intermitente', description: 'Guia completo', duration: '30 min', thumbnail: '⏰', category: 'Nutrição', videoUrl: '', order: 4 },
-    { id: '5', title: 'Exercícios Iniciantes', description: 'Treinos simples', duration: '35 min', thumbnail: '💪', category: 'Exercícios', videoUrl: '', order: 5 },
-    { id: '6', title: 'Controle Emocional', description: 'Fome emocional', duration: '20 min', thumbnail: '🧠', category: 'Mindset', videoUrl: '', order: 6 },
+// Módulos padrão
+const defaultModules: Module[] = [
+    {
+        id: '1',
+        title: 'Fundamentos do Emagrecimento',
+        description: 'Aprenda os conceitos básicos para uma jornada de sucesso',
+        thumbnail: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=80',
+        color: '#00C853',
+        order: 1,
+        lessons: [
+            { id: '1-1', title: 'Bem-vindo à sua Transformação', description: 'Introdução completa ao programa', duration: '12 min', thumbnail: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=400&q=80', videoUrl: '', order: 1 },
+            { id: '1-2', title: 'Entendendo seu Metabolismo', description: 'Como seu corpo queima calorias', duration: '18 min', thumbnail: 'https://images.unsplash.com/photo-1505576399279-565b52d4ac71?w=400&q=80', videoUrl: '', order: 2 },
+        ]
+    },
+    {
+        id: '2',
+        title: 'Nutrição Inteligente',
+        description: 'Domine a alimentação saudável sem dietas restritivas',
+        thumbnail: 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?w=600&q=80',
+        color: '#FF6D00',
+        order: 2,
+        lessons: [
+            { id: '2-1', title: 'Montando seu Prato Perfeito', description: 'Equilibrando macronutrientes', duration: '20 min', thumbnail: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80', videoUrl: '', order: 1 },
+        ]
+    },
 ]
 
 const defaultSettings: AppSettings = {
@@ -45,7 +78,10 @@ const defaultSettings: AppSettings = {
     welcomeTitle: 'Sua jornada de transformação começa aqui',
     welcomeSubtitle: 'Transforme seu corpo com o poder da comunidade',
     primaryColor: '#00C853',
-    secondaryColor: '#FF4081'
+    secondaryColor: '#FF4081',
+    heroBannerImage: 'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=1200&q=80',
+    heroTitle: 'Transforme seu Corpo',
+    heroSubtitle: 'Acesse todas as aulas exclusivas e comece sua jornada de transformação agora mesmo.'
 }
 
 const defaultAIResponses: AIResponse[] = [
@@ -56,11 +92,11 @@ const defaultAIResponses: AIResponse[] = [
 
 export default function AdminPanel() {
     const { profile } = useAuth()
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'posts' | 'challenges' | 'lessons' | 'ai' | 'settings' | 'logs'>('dashboard')
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'posts' | 'challenges' | 'modules' | 'ai' | 'settings' | 'logs'>('dashboard')
     const [users, setUsers] = useState<User[]>([])
     const [posts, setPosts] = useState<(Post & { user?: User })[]>([])
     const [challenges, setChallenges] = useState<Challenge[]>([])
-    const [lessons, setLessons] = useState<Lesson[]>(defaultLessons)
+    const [modules, setModules] = useState<Module[]>(defaultModules)
     const [settings, setSettings] = useState<AppSettings>(defaultSettings)
     const [aiResponses, setAiResponses] = useState<AIResponse[]>(defaultAIResponses)
     const [loading, setLoading] = useState(true)
@@ -69,8 +105,9 @@ export default function AdminPanel() {
 
     // Modal states
     const [showModal, setShowModal] = useState(false)
-    const [modalType, setModalType] = useState<'challenge' | 'lesson' | 'ai' | 'user'>('challenge')
+    const [modalType, setModalType] = useState<'challenge' | 'module' | 'lesson' | 'ai' | 'user'>('challenge')
     const [editingItem, setEditingItem] = useState<any>(null)
+    const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null)
 
     // Forms
     const [challengeForm, setChallengeForm] = useState<{
@@ -80,10 +117,16 @@ export default function AdminPanel() {
         title: '', description: '', emoji: '🎯', color: '#00C853',
         duration_days: 7, difficulty: 'Fácil', reward_points: 100
     })
-    const [lessonForm, setLessonForm] = useState({
-        title: '', description: '', duration: '15 min', thumbnail: '📚',
-        category: 'Fundamentos', videoUrl: '', order: 1
+
+    const [moduleForm, setModuleForm] = useState({
+        title: '', description: '', thumbnail: '', color: '#00C853', order: 1
     })
+
+    const [lessonForm, setLessonForm] = useState({
+        title: '', description: '', duration: '15 min', thumbnail: '',
+        videoUrl: '', order: 1, locked: false
+    })
+
     const [aiForm, setAiForm] = useState({ keyword: '', response: '' })
     const [userForm, setUserForm] = useState({ name: '', points: 0, streak_days: 0, weight_goal: 0 })
 
@@ -92,11 +135,11 @@ export default function AdminPanel() {
     useEffect(() => {
         if (isAdmin) {
             fetchData()
-            // Carregar settings do localStorage
+            // Carregar dados do localStorage
             const savedSettings = localStorage.getItem('appSettings')
             if (savedSettings) setSettings(JSON.parse(savedSettings))
-            const savedLessons = localStorage.getItem('adminLessons')
-            if (savedLessons) setLessons(JSON.parse(savedLessons))
+            const savedModules = localStorage.getItem('adminModules')
+            if (savedModules) setModules(JSON.parse(savedModules))
             const savedAI = localStorage.getItem('adminAIResponses')
             if (savedAI) setAiResponses(JSON.parse(savedAI))
         }
@@ -167,7 +210,6 @@ export default function AdminPanel() {
     }
 
     const featurePost = async (postId: string) => {
-        // Adiciona likes para destacar
         await supabase.from('posts').update({ likes_count: 999 }).eq('id', postId)
         addLog('Destacou um post')
         fetchData()
@@ -212,38 +254,114 @@ export default function AdminPanel() {
         fetchData()
     }
 
-    // Lesson actions
-    const openLessonModal = (lesson?: Lesson) => {
-        if (lesson) {
-            setEditingItem(lesson)
-            setLessonForm({ title: lesson.title, description: lesson.description, duration: lesson.duration, thumbnail: lesson.thumbnail, category: lesson.category, videoUrl: lesson.videoUrl, order: lesson.order })
+    // Module actions
+    const openModuleModal = (module?: Module) => {
+        if (module) {
+            setEditingItem(module)
+            setModuleForm({
+                title: module.title,
+                description: module.description,
+                thumbnail: module.thumbnail,
+                color: module.color,
+                order: module.order
+            })
         } else {
             setEditingItem(null)
-            setLessonForm({ title: '', description: '', duration: '15 min', thumbnail: '📚', category: 'Fundamentos', videoUrl: '', order: lessons.length + 1 })
+            setModuleForm({ title: '', description: '', thumbnail: '', color: '#00C853', order: modules.length + 1 })
+        }
+        setModalType('module')
+        setShowModal(true)
+    }
+
+    const saveModule = () => {
+        let newModules: Module[]
+        if (editingItem) {
+            newModules = modules.map(m => m.id === editingItem.id ? { ...m, ...moduleForm } : m)
+            addLog(`Editou módulo: ${moduleForm.title}`)
+        } else {
+            newModules = [...modules, { id: Date.now().toString(), ...moduleForm, lessons: [] }]
+            addLog(`Criou módulo: ${moduleForm.title}`)
+        }
+        setModules(newModules)
+        localStorage.setItem('adminModules', JSON.stringify(newModules))
+        setShowModal(false)
+    }
+
+    const deleteModule = (id: string, title: string) => {
+        if (!confirm(`Excluir módulo "${title}" e todas as suas aulas?`)) return
+        const newModules = modules.filter(m => m.id !== id)
+        setModules(newModules)
+        localStorage.setItem('adminModules', JSON.stringify(newModules))
+        addLog(`Excluiu módulo: ${title}`)
+    }
+
+    // Lesson actions
+    const openLessonModal = (moduleId: string, lesson?: Lesson) => {
+        setSelectedModuleId(moduleId)
+        const module = modules.find(m => m.id === moduleId)
+        if (lesson) {
+            setEditingItem(lesson)
+            setLessonForm({
+                title: lesson.title,
+                description: lesson.description,
+                duration: lesson.duration,
+                thumbnail: lesson.thumbnail,
+                videoUrl: lesson.videoUrl || '',
+                order: lesson.order,
+                locked: lesson.locked || false
+            })
+        } else {
+            setEditingItem(null)
+            setLessonForm({
+                title: '',
+                description: '',
+                duration: '15 min',
+                thumbnail: '',
+                videoUrl: '',
+                order: (module?.lessons.length || 0) + 1,
+                locked: false
+            })
         }
         setModalType('lesson')
         setShowModal(true)
     }
 
     const saveLesson = () => {
-        let newLessons: Lesson[]
-        if (editingItem) {
-            newLessons = lessons.map(l => l.id === editingItem.id ? { ...l, ...lessonForm } : l)
-            addLog(`Editou aula: ${lessonForm.title}`)
-        } else {
-            newLessons = [...lessons, { id: Date.now().toString(), ...lessonForm }]
-            addLog(`Criou aula: ${lessonForm.title}`)
-        }
-        setLessons(newLessons)
-        localStorage.setItem('adminLessons', JSON.stringify(newLessons))
+        if (!selectedModuleId) return
+
+        const newModules = modules.map(module => {
+            if (module.id !== selectedModuleId) return module
+
+            let newLessons: Lesson[]
+            if (editingItem) {
+                newLessons = module.lessons.map(l =>
+                    l.id === editingItem.id ? { ...l, ...lessonForm } : l
+                )
+                addLog(`Editou aula: ${lessonForm.title}`)
+            } else {
+                newLessons = [...module.lessons, { id: Date.now().toString(), ...lessonForm }]
+                addLog(`Criou aula: ${lessonForm.title}`)
+            }
+
+            return { ...module, lessons: newLessons }
+        })
+
+        setModules(newModules)
+        localStorage.setItem('adminModules', JSON.stringify(newModules))
         setShowModal(false)
+        setSelectedModuleId(null)
     }
 
-    const deleteLesson = (id: string, title: string) => {
+    const deleteLesson = (moduleId: string, lessonId: string, title: string) => {
         if (!confirm(`Excluir aula "${title}"?`)) return
-        const newLessons = lessons.filter(l => l.id !== id)
-        setLessons(newLessons)
-        localStorage.setItem('adminLessons', JSON.stringify(newLessons))
+
+        const newModules = modules.map(module => {
+            if (module.id !== moduleId) return module
+            return { ...module, lessons: module.lessons.filter(l => l.id !== lessonId) }
+        })
+
+        setModules(newModules)
+        localStorage.setItem('adminModules', JSON.stringify(newModules))
         addLog(`Excluiu aula: ${title}`)
     }
 
@@ -287,8 +405,8 @@ export default function AdminPanel() {
     }
 
     // Export
-    const exportData = (type: 'users' | 'posts' | 'challenges') => {
-        const data = type === 'users' ? users : type === 'posts' ? posts : challenges
+    const exportData = (type: 'users' | 'posts' | 'challenges' | 'modules') => {
+        const data = type === 'users' ? users : type === 'posts' ? posts : type === 'challenges' ? challenges : modules
         const json = JSON.stringify(data, null, 2)
         const blob = new Blob([json], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
@@ -300,11 +418,13 @@ export default function AdminPanel() {
     }
 
     // Stats
+    const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0)
     const stats = {
         totalUsers: users.length,
         totalPosts: posts.length,
         totalChallenges: challenges.length,
-        totalLessons: lessons.length,
+        totalModules: modules.length,
+        totalLessons: totalLessons,
         activeUsers: users.filter(u => u.streak_days > 0).length,
         totalPoints: users.reduce((sum, u) => sum + (u.points || 0), 0),
         avgPoints: users.length ? Math.round(users.reduce((sum, u) => sum + (u.points || 0), 0) / users.length) : 0,
@@ -344,7 +464,7 @@ export default function AdminPanel() {
                     { id: 'users', label: '👥 Usuários' },
                     { id: 'posts', label: '📝 Posts' },
                     { id: 'challenges', label: '🏆 Desafios' },
-                    { id: 'lessons', label: '📚 Aulas' },
+                    { id: 'modules', label: '📚 Módulos/Aulas' },
                     { id: 'ai', label: '🤖 IA' },
                     { id: 'settings', label: '⚙️ Config' },
                     { id: 'logs', label: '📋 Logs' },
@@ -389,9 +509,14 @@ export default function AdminPanel() {
                                         <span className="stat-icon">🏆</span>
                                     </div>
                                     <div className="stat-card-admin purple">
+                                        <span className="stat-number">{stats.totalModules}</span>
+                                        <span className="stat-label">Módulos</span>
+                                        <span className="stat-icon">📚</span>
+                                    </div>
+                                    <div className="stat-card-admin teal">
                                         <span className="stat-number">{stats.totalLessons}</span>
                                         <span className="stat-label">Aulas</span>
-                                        <span className="stat-icon">📚</span>
+                                        <span className="stat-icon">🎬</span>
                                     </div>
                                     <div className="stat-card-admin pink">
                                         <span className="stat-number">{stats.totalLikes}</span>
@@ -402,11 +527,6 @@ export default function AdminPanel() {
                                         <span className="stat-number">{stats.totalPoints.toLocaleString()}</span>
                                         <span className="stat-label">Pontos Total</span>
                                         <span className="stat-icon">⭐</span>
-                                    </div>
-                                    <div className="stat-card-admin teal">
-                                        <span className="stat-number">{stats.avgPoints}</span>
-                                        <span className="stat-label">Média Pontos</span>
-                                        <span className="stat-icon">📈</span>
                                     </div>
                                 </div>
 
@@ -436,9 +556,9 @@ export default function AdminPanel() {
                                     <h3>⚡ Ações Rápidas</h3>
                                     <div className="action-buttons">
                                         <button onClick={() => { setActiveTab('challenges'); openChallengeModal(); }}>+ Novo Desafio</button>
-                                        <button onClick={() => { setActiveTab('lessons'); openLessonModal(); }}>+ Nova Aula</button>
+                                        <button onClick={() => { setActiveTab('modules'); openModuleModal(); }}>+ Novo Módulo</button>
                                         <button onClick={() => exportData('users')}>📥 Exportar Usuários</button>
-                                        <button onClick={() => exportData('posts')}>📥 Exportar Posts</button>
+                                        <button onClick={() => exportData('modules')}>📥 Exportar Módulos</button>
                                     </div>
                                 </div>
                             </div>
@@ -563,29 +683,88 @@ export default function AdminPanel() {
                             </div>
                         )}
 
-                        {/* Lessons */}
-                        {activeTab === 'lessons' && (
+                        {/* Modules & Lessons */}
+                        {activeTab === 'modules' && (
                             <div className="section-admin">
                                 <div className="section-header-admin">
-                                    <h3>📚 Gerenciar Aulas ({lessons.length})</h3>
-                                    <button className="btn-add" onClick={() => openLessonModal()}>+ Nova Aula</button>
+                                    <h3>📚 Gerenciar Módulos e Aulas</h3>
+                                    <button className="btn-add" onClick={() => openModuleModal()}>+ Novo Módulo</button>
                                 </div>
-                                <div className="cards-grid">
-                                    {lessons.map(lesson => (
-                                        <div key={lesson.id} className="item-card">
-                                            <div className="item-emoji">{lesson.thumbnail}</div>
-                                            <div className="item-info">
-                                                <h4>{lesson.title}</h4>
-                                                <p>{lesson.description}</p>
-                                                <div className="item-meta">
-                                                    <span className="category">{lesson.category}</span>
-                                                    <span>⏱️ {lesson.duration}</span>
-                                                    <span>📋 Ordem: {lesson.order}</span>
+                                <p className="section-hint">
+                                    Configure módulos e aulas da área de membros estilo Netflix.
+                                    Cada módulo contém várias aulas.
+                                </p>
+
+                                <div className="modules-admin-list">
+                                    {modules.map((module, mIndex) => (
+                                        <div key={module.id} className="module-admin-card" style={{ borderLeftColor: module.color }}>
+                                            <div className="module-admin-header">
+                                                <div className="module-admin-thumb">
+                                                    {module.thumbnail ? (
+                                                        <img src={module.thumbnail} alt={module.title} />
+                                                    ) : (
+                                                        <div className="module-placeholder">📚</div>
+                                                    )}
+                                                </div>
+                                                <div className="module-admin-info">
+                                                    <div className="module-admin-title">
+                                                        <span className="module-number-badge" style={{ background: module.color }}>
+                                                            Módulo {mIndex + 1}
+                                                        </span>
+                                                        <h4>{module.title}</h4>
+                                                    </div>
+                                                    <p>{module.description}</p>
+                                                    <div className="module-admin-meta">
+                                                        <span>{module.lessons.length} aulas</span>
+                                                        <span style={{ color: module.color }}>●</span>
+                                                        <span>Ordem: {module.order}</span>
+                                                    </div>
+                                                </div>
+                                                <div className="module-admin-actions">
+                                                    <button className="btn-icon edit" onClick={() => openModuleModal(module)} title="Editar Módulo">✏️</button>
+                                                    <button className="btn-icon delete" onClick={() => deleteModule(module.id, module.title)} title="Excluir Módulo">🗑️</button>
                                                 </div>
                                             </div>
-                                            <div className="item-actions">
-                                                <button onClick={() => openLessonModal(lesson)}>✏️</button>
-                                                <button onClick={() => deleteLesson(lesson.id, lesson.title)}>🗑️</button>
+
+                                            <div className="module-lessons-admin">
+                                                <div className="lessons-admin-header">
+                                                    <span>Aulas do Módulo</span>
+                                                    <button className="btn-add-small" onClick={() => openLessonModal(module.id)}>
+                                                        + Adicionar Aula
+                                                    </button>
+                                                </div>
+
+                                                {module.lessons.length === 0 ? (
+                                                    <p className="no-lessons">Nenhuma aula cadastrada. Clique em "Adicionar Aula".</p>
+                                                ) : (
+                                                    <div className="lessons-admin-list">
+                                                        {module.lessons.map((lesson, lIndex) => (
+                                                            <div key={lesson.id} className="lesson-admin-item">
+                                                                <span className="lesson-order">{lIndex + 1}</span>
+                                                                <div className="lesson-admin-thumb">
+                                                                    {lesson.thumbnail ? (
+                                                                        <img src={lesson.thumbnail} alt={lesson.title} />
+                                                                    ) : (
+                                                                        <div className="lesson-placeholder">🎬</div>
+                                                                    )}
+                                                                </div>
+                                                                <div className="lesson-admin-info">
+                                                                    <h5>{lesson.title}</h5>
+                                                                    <p>{lesson.description}</p>
+                                                                    <div className="lesson-admin-meta">
+                                                                        <span>⏱️ {lesson.duration}</span>
+                                                                        {lesson.videoUrl && <span className="has-video">🎥 Vídeo</span>}
+                                                                        {lesson.locked && <span className="is-locked">🔒 Bloqueada</span>}
+                                                                    </div>
+                                                                </div>
+                                                                <div className="lesson-admin-actions">
+                                                                    <button onClick={() => openLessonModal(module.id, lesson)}>✏️</button>
+                                                                    <button onClick={() => deleteLesson(module.id, lesson.id, lesson.title)}>🗑️</button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -621,28 +800,66 @@ export default function AdminPanel() {
                             <div className="section-admin">
                                 <h3>⚙️ Configurações do App</h3>
                                 <div className="settings-form">
-                                    <div className="form-group">
-                                        <label>Nome do App</label>
-                                        <input type="text" value={settings.appName} onChange={e => setSettings({ ...settings, appName: e.target.value })} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Título de Boas-vindas</label>
-                                        <input type="text" value={settings.welcomeTitle} onChange={e => setSettings({ ...settings, welcomeTitle: e.target.value })} />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Subtítulo</label>
-                                        <input type="text" value={settings.welcomeSubtitle} onChange={e => setSettings({ ...settings, welcomeSubtitle: e.target.value })} />
-                                    </div>
-                                    <div className="form-row">
+                                    <div className="settings-section">
+                                        <h4>🏠 Configurações Gerais</h4>
                                         <div className="form-group">
-                                            <label>Cor Primária</label>
-                                            <input type="color" value={settings.primaryColor} onChange={e => setSettings({ ...settings, primaryColor: e.target.value })} />
+                                            <label>Nome do App</label>
+                                            <input type="text" value={settings.appName} onChange={e => setSettings({ ...settings, appName: e.target.value })} />
                                         </div>
                                         <div className="form-group">
-                                            <label>Cor Secundária</label>
-                                            <input type="color" value={settings.secondaryColor} onChange={e => setSettings({ ...settings, secondaryColor: e.target.value })} />
+                                            <label>Título de Boas-vindas</label>
+                                            <input type="text" value={settings.welcomeTitle} onChange={e => setSettings({ ...settings, welcomeTitle: e.target.value })} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Subtítulo</label>
+                                            <input type="text" value={settings.welcomeSubtitle} onChange={e => setSettings({ ...settings, welcomeSubtitle: e.target.value })} />
                                         </div>
                                     </div>
+
+                                    <div className="settings-section">
+                                        <h4>🎬 Banner da Área de Membros</h4>
+                                        <div className="form-group">
+                                            <label>URL da Imagem de Fundo</label>
+                                            <input
+                                                type="text"
+                                                value={settings.heroBannerImage}
+                                                onChange={e => setSettings({ ...settings, heroBannerImage: e.target.value })}
+                                                placeholder="https://..."
+                                            />
+                                            <span className="form-hint">Recomendado: 1920x1080 pixels</span>
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Título do Banner</label>
+                                            <input
+                                                type="text"
+                                                value={settings.heroTitle}
+                                                onChange={e => setSettings({ ...settings, heroTitle: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label>Subtítulo do Banner</label>
+                                            <textarea
+                                                value={settings.heroSubtitle}
+                                                onChange={e => setSettings({ ...settings, heroSubtitle: e.target.value })}
+                                                rows={2}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="settings-section">
+                                        <h4>🎨 Cores</h4>
+                                        <div className="form-row">
+                                            <div className="form-group">
+                                                <label>Cor Primária</label>
+                                                <input type="color" value={settings.primaryColor} onChange={e => setSettings({ ...settings, primaryColor: e.target.value })} />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Cor Secundária</label>
+                                                <input type="color" value={settings.secondaryColor} onChange={e => setSettings({ ...settings, secondaryColor: e.target.value })} />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <button className="btn-primary btn-save" onClick={saveSettings}>💾 Salvar Configurações</button>
                                 </div>
                             </div>
@@ -677,6 +894,7 @@ export default function AdminPanel() {
                     <div className="admin-modal" onClick={e => e.stopPropagation()}>
                         <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
 
+                        {/* Challenge Modal */}
                         {modalType === 'challenge' && (
                             <>
                                 <h3>{editingItem ? '✏️ Editar Desafio' : '🆕 Novo Desafio'}</h3>
@@ -700,38 +918,99 @@ export default function AdminPanel() {
                             </>
                         )}
 
-                        {modalType === 'lesson' && (
+                        {/* Module Modal */}
+                        {modalType === 'module' && (
                             <>
-                                <h3>{editingItem ? '✏️ Editar Aula' : '🆕 Nova Aula'}</h3>
-                                <div className="form-group"><label>Título</label><input value={lessonForm.title} onChange={e => setLessonForm({ ...lessonForm, title: e.target.value })} /></div>
-                                <div className="form-group"><label>Descrição</label><textarea value={lessonForm.description} onChange={e => setLessonForm({ ...lessonForm, description: e.target.value })} rows={2} /></div>
-                                <div className="form-row">
-                                    <div className="form-group"><label>Emoji</label><input value={lessonForm.thumbnail} onChange={e => setLessonForm({ ...lessonForm, thumbnail: e.target.value })} /></div>
-                                    <div className="form-group"><label>Duração</label><input value={lessonForm.duration} onChange={e => setLessonForm({ ...lessonForm, duration: e.target.value })} /></div>
-                                </div>
-                                <div className="form-row">
-                                    <div className="form-group">
-                                        <label>Categoria</label>
-                                        <select value={lessonForm.category} onChange={e => setLessonForm({ ...lessonForm, category: e.target.value })}>
-                                            <option>Fundamentos</option><option>Nutrição</option><option>Exercícios</option><option>Mindset</option>
-                                        </select>
-                                    </div>
-                                    <div className="form-group"><label>Ordem</label><input type="number" value={lessonForm.order} onChange={e => setLessonForm({ ...lessonForm, order: parseInt(e.target.value) || 1 })} /></div>
+                                <h3>{editingItem ? '✏️ Editar Módulo' : '🆕 Novo Módulo'}</h3>
+                                <div className="form-group">
+                                    <label>Título do Módulo</label>
+                                    <input value={moduleForm.title} onChange={e => setModuleForm({ ...moduleForm, title: e.target.value })} placeholder="Ex: Fundamentos do Emagrecimento" />
                                 </div>
                                 <div className="form-group">
-                                    <label>Código Embed do Vídeo (iframe)</label>
-                                    <textarea
-                                        value={lessonForm.videoUrl}
-                                        onChange={e => setLessonForm({ ...lessonForm, videoUrl: e.target.value })}
-                                        placeholder='<iframe src="https://..." ...></iframe>'
-                                        rows={4}
-                                    />
-                                    <span className="form-hint">Cole o código embed do YouTube, Vimeo, etc.</span>
+                                    <label>Descrição</label>
+                                    <textarea value={moduleForm.description} onChange={e => setModuleForm({ ...moduleForm, description: e.target.value })} rows={3} placeholder="Breve descrição do módulo..." />
                                 </div>
-                                <button className="btn-primary btn-save" onClick={saveLesson}>💾 Salvar</button>
+                                <div className="form-group">
+                                    <label>URL da Imagem de Capa</label>
+                                    <input value={moduleForm.thumbnail} onChange={e => setModuleForm({ ...moduleForm, thumbnail: e.target.value })} placeholder="https://images.unsplash.com/..." />
+                                    <span className="form-hint">Recomendado: 600x400 pixels (proporção 16:10)</span>
+                                </div>
+                                {moduleForm.thumbnail && (
+                                    <div className="image-preview">
+                                        <img src={moduleForm.thumbnail} alt="Preview" />
+                                    </div>
+                                )}
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Cor do Módulo</label>
+                                        <input type="color" value={moduleForm.color} onChange={e => setModuleForm({ ...moduleForm, color: e.target.value })} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Ordem</label>
+                                        <input type="number" value={moduleForm.order} onChange={e => setModuleForm({ ...moduleForm, order: parseInt(e.target.value) || 1 })} />
+                                    </div>
+                                </div>
+                                <button className="btn-primary btn-save" onClick={saveModule}>💾 Salvar Módulo</button>
                             </>
                         )}
 
+                        {/* Lesson Modal */}
+                        {modalType === 'lesson' && (
+                            <>
+                                <h3>{editingItem ? '✏️ Editar Aula' : '🆕 Nova Aula'}</h3>
+                                <div className="form-group">
+                                    <label>Título da Aula</label>
+                                    <input value={lessonForm.title} onChange={e => setLessonForm({ ...lessonForm, title: e.target.value })} placeholder="Ex: Bem-vindo à sua Transformação" />
+                                </div>
+                                <div className="form-group">
+                                    <label>Descrição</label>
+                                    <textarea value={lessonForm.description} onChange={e => setLessonForm({ ...lessonForm, description: e.target.value })} rows={2} placeholder="Breve descrição da aula..." />
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Duração</label>
+                                        <input value={lessonForm.duration} onChange={e => setLessonForm({ ...lessonForm, duration: e.target.value })} placeholder="15 min" />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Ordem</label>
+                                        <input type="number" value={lessonForm.order} onChange={e => setLessonForm({ ...lessonForm, order: parseInt(e.target.value) || 1 })} />
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label>URL da Thumbnail</label>
+                                    <input value={lessonForm.thumbnail} onChange={e => setLessonForm({ ...lessonForm, thumbnail: e.target.value })} placeholder="https://images.unsplash.com/..." />
+                                    <span className="form-hint">Recomendado: 400x225 pixels (proporção 16:9)</span>
+                                </div>
+                                {lessonForm.thumbnail && (
+                                    <div className="image-preview small">
+                                        <img src={lessonForm.thumbnail} alt="Preview" />
+                                    </div>
+                                )}
+                                <div className="form-group">
+                                    <label>Código Embed do Vídeo</label>
+                                    <textarea
+                                        value={lessonForm.videoUrl}
+                                        onChange={e => setLessonForm({ ...lessonForm, videoUrl: e.target.value })}
+                                        placeholder='Cole aqui: <iframe src="https://..." ...></iframe> ou URL do YouTube/Vimeo'
+                                        rows={4}
+                                    />
+                                    <span className="form-hint">Suporta: YouTube, Vimeo, iframe embed ou URL direta de vídeo</span>
+                                </div>
+                                <div className="form-group checkbox-group">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={lessonForm.locked}
+                                            onChange={e => setLessonForm({ ...lessonForm, locked: e.target.checked })}
+                                        />
+                                        <span>🔒 Aula Bloqueada (requer upgrade)</span>
+                                    </label>
+                                </div>
+                                <button className="btn-primary btn-save" onClick={saveLesson}>💾 Salvar Aula</button>
+                            </>
+                        )}
+
+                        {/* AI Modal */}
                         {modalType === 'ai' && (
                             <>
                                 <h3>{editingItem ? '✏️ Editar Resposta' : '🆕 Nova Resposta IA'}</h3>
@@ -741,6 +1020,7 @@ export default function AdminPanel() {
                             </>
                         )}
 
+                        {/* User Modal */}
                         {modalType === 'user' && editingItem && (
                             <>
                                 <h3>✏️ Editar Usuário</h3>
