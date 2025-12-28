@@ -7,7 +7,7 @@ import AuthModal from './components/AuthModal'
 import BottomNav from './components/BottomNav'
 import Feed from './components/Feed'
 import MemberArea from './components/MemberArea'
-import AIAssistant from './components/AIAssistant'
+import PlanGenerator from './components/PlanGenerator'
 import ChallengesPage from './components/ChallengesPage'
 import ProfilePage from './components/ProfilePage'
 import Support from './components/Support'
@@ -77,10 +77,17 @@ function App() {
                 </div>
               </div>
               <div className="welcome-feature">
-                <div className="feature-icon">🤖</div>
+                <div className="feature-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14,2 14,8 20,8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                  </svg>
+                </div>
                 <div className="feature-content">
-                  <span className="feature-title">IA Personalizada</span>
-                  <span className="feature-desc">Respostas inteligentes</span>
+                  <span className="feature-title">Planos Personalizados</span>
+                  <span className="feature-desc">Treino e dieta sob medida</span>
                 </div>
               </div>
               <div className="welcome-feature">
@@ -131,7 +138,7 @@ function App() {
       <main className="main-content">
         {activeTab === 'feed' && <Feed />}
         {activeTab === 'lessons' && <MemberArea />}
-        {activeTab === 'ai' && <AIAssistant />}
+        {activeTab === 'plans' && <PlanGenerator />}
         {activeTab === 'challenges' && <ChallengesPage />}
         {activeTab === 'profile' && <ProfilePage />}
         {activeTab === 'support' && <Support />}
