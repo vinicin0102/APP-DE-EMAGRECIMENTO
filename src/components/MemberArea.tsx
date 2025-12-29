@@ -87,7 +87,6 @@ export default function MemberArea() {
     const [selectedModule, setSelectedModule] = useState<Module | null>(null)
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
     const [continueWatching, setContinueWatching] = useState<Lesson[]>([])
-    const [bannerIndex, setBannerIndex] = useState(0)
     const [isLoaded, setIsLoaded] = useState(false)
     const carouselRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
 
@@ -107,14 +106,6 @@ export default function MemberArea() {
         // Animação de entrada
         setTimeout(() => setIsLoaded(true), 100)
     }, [])
-
-    // Banner rotation
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setBannerIndex((prev) => (prev + 1) % modules.length)
-        }, 8000)
-        return () => clearInterval(interval)
-    }, [modules.length])
 
     // Calcular progresso geral
     const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0)
@@ -178,8 +169,6 @@ export default function MemberArea() {
         }
     }
 
-    const currentBannerModule = modules[bannerIndex]
-
     return (
         <div className={`member-area-premium ${isLoaded ? 'loaded' : ''}`}>
             {/* Partículas de fundo */}
@@ -239,84 +228,36 @@ export default function MemberArea() {
             </header>
 
             <div className="member-content-premium">
-                {/* Hero Banner Cinematográfico */}
-                <section className="hero-banner-cinematic">
-                    <div className="banner-slides">
-                        {modules.map((module, idx) => (
-                            <div
-                                key={module.id}
-                                className={`banner-slide ${idx === bannerIndex ? 'active' : ''}`}
-                            >
-                                <img src={module.thumbnail} alt={module.title} />
-                                <div className="banner-overlay-gradient"></div>
-                            </div>
-                        ))}
+                {/* Hero Banner Estático */}
+                <section className="hero-banner-static">
+                    <div className="banner-image-static">
+                        <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80" alt="SlimFit" />
+                        <div className="banner-overlay-static"></div>
                     </div>
 
-                    <div className="hero-content-cinematic">
-                        <div className="hero-badge-container">
-                            <span className="hero-badge-new">
-                                <span className="badge-pulse"></span>
-                                EXCLUSIVO
-                            </span>
-                            <span className="hero-badge-rating">⭐ 4.9</span>
+                    <div className="hero-content-static">
+                        <div className="hero-badges-static">
+                            <span className="badge-exclusive">💎 EXCLUSIVO</span>
+                            <span className="badge-rating">⭐ 4.9</span>
                         </div>
 
-                        <h1 className="hero-title-cinematic">
-                            <span className="title-line-1">Transforme</span>
-                            <span className="title-line-2">Seu Corpo</span>
+                        <h1 className="hero-title-static">
+                            Sua Jornada de<br />
+                            <span className="title-highlight">Transformação</span>
                         </h1>
 
-                        <p className="hero-description-cinematic">
-                            {currentBannerModule?.description || 'Acesse todo o conteúdo exclusivo e comece sua transformação.'}
+                        <p className="hero-description-static">
+                            Acesse {totalLessons} aulas exclusivas em {modules.length} módulos
                         </p>
 
-                        <div className="hero-meta-cinematic">
-                            <span className="meta-item">
-                                <span className="meta-icon">📚</span>
-                                {totalLessons} Aulas
-                            </span>
-                            <span className="meta-divider">•</span>
-                            <span className="meta-item">
-                                <span className="meta-icon">🎯</span>
-                                {modules.length} Módulos
-                            </span>
-                            <span className="meta-divider">•</span>
-                            <span className="meta-item">
-                                <span className="meta-icon">⏰</span>
-                                Acesso Vitalício
-                            </span>
-                        </div>
-
-                        <div className="hero-actions-cinematic">
-                            <button className="btn-watch-now" onClick={() => {
+                        <div className="hero-buttons-static">
+                            <button className="btn-start-static" onClick={() => {
                                 const firstIncomplete = modules[0]?.lessons.find(l => !l.completed && !l.locked)
                                 if (firstIncomplete) setSelectedLesson(firstIncomplete)
                             }}>
-                                <span className="btn-icon">▶</span>
-                                <span className="btn-text">Assistir Agora</span>
-                                <div className="btn-shine-effect"></div>
-                            </button>
-                            <button className="btn-more-info" onClick={() => setSelectedModule(modules[bannerIndex])}>
-                                <span className="btn-icon">ℹ️</span>
-                                <span className="btn-text">Mais Informações</span>
+                                ▶ Começar Agora
                             </button>
                         </div>
-                    </div>
-
-                    {/* Banner Navigation Dots */}
-                    <div className="banner-nav-dots">
-                        {modules.map((_, idx) => (
-                            <button
-                                key={idx}
-                                className={`nav-dot ${idx === bannerIndex ? 'active' : ''}`}
-                                onClick={() => setBannerIndex(idx)}
-                            >
-                                <div className="dot-progress" style={{
-                                    animationDuration: idx === bannerIndex ? '8s' : '0s'
-                                }}></div>
-                            </button>
-                        ))}
                     </div>
                 </section>
 
