@@ -12,6 +12,7 @@ import ChallengesPage from './components/ChallengesPage'
 import ProfilePage from './components/ProfilePage'
 import Support from './components/Support'
 import AdminPanel from './components/AdminPanel'
+import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 
 const ADMIN_EMAIL = 'admin@gmail.com'
 
@@ -128,6 +129,7 @@ function App() {
             </div>
           </div>
         </div>
+        <PWAInstallPrompt />
         <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
       </div>
     )
@@ -144,6 +146,7 @@ function App() {
         {activeTab === 'support' && <Support />}
         {activeTab === 'admin' && <AdminPanel />}
       </main>
+      <PWAInstallPrompt />
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
     </div>
   )

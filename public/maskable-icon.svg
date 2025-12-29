@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D1520"/>
+      <stop offset="100%" style="stop-color:#0A0F1A"/>
+    </linearGradient>
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00C853"/>
+      <stop offset="50%" style="stop-color:#00E676"/>
+      <stop offset="100%" style="stop-color:#69F0AE"/>
+    </linearGradient>
+    <linearGradient id="innerGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00E676"/>
+      <stop offset="100%" style="stop-color:#B9F6CA"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Full background for maskable icon (safe zone is 80% in center) -->
+  <rect width="512" height="512" fill="url(#bgGrad)"/>
+  
+  <!-- Main flame/energy symbol - centered in safe zone -->
+  <g filter="url(#glow)" transform="translate(256, 256)">
+    <!-- Outer flame - slightly smaller to fit in safe zone -->
+    <path d="M0,-120 C55,-75 75,-30 65,30 C60,65 32,95 0,120 C-32,95 -60,65 -65,30 C-75,-30 -55,-75 0,-120 Z" 
+          fill="url(#flameGrad)" opacity="0.9"/>
+    
+    <!-- Middle flame layer -->
+    <path d="M0,-85 C40,-55 50,-20 45,25 C40,48 22,70 0,85 C-22,70 -40,48 -45,25 C-50,-20 -40,-55 0,-85 Z" 
+          fill="url(#innerGrad)" opacity="0.85"/>
+    
+    <!-- Inner flame -->
+    <path d="M0,-55 C25,-35 32,-12 28,15 C24,32 12,45 0,55 C-12,45 -24,32 -28,15 C-32,-12 -25,-35 0,-55 Z" 
+          fill="#B9F6CA" opacity="0.7"/>
+    
+    <!-- Core highlight -->
+    <ellipse cx="0" cy="8" rx="16" ry="32" fill="#ffffff" opacity="0.4"/>
+    <ellipse cx="0" cy="0" rx="8" ry="20" fill="#ffffff" opacity="0.6"/>
+  </g>
+</svg>

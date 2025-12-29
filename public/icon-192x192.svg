@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D1520"/>
+      <stop offset="100%" style="stop-color:#0A0F1A"/>
+    </linearGradient>
+    <linearGradient id="flameGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00C853"/>
+      <stop offset="50%" style="stop-color:#00E676"/>
+      <stop offset="100%" style="stop-color:#69F0AE"/>
+    </linearGradient>
+    <linearGradient id="innerGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00E676"/>
+      <stop offset="100%" style="stop-color:#B9F6CA"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="192" height="192" rx="40" fill="url(#bgGrad)"/>
+  
+  <!-- Outer glow ring -->
+  <circle cx="96" cy="96" r="70" fill="none" stroke="url(#flameGrad)" stroke-width="2" opacity="0.3"/>
+  
+  <!-- Main flame/energy symbol -->
+  <g filter="url(#glow)" transform="translate(96, 96)">
+    <!-- Outer flame -->
+    <path d="M0,-55 C25,-35 35,-15 30,15 C28,30 15,45 0,55 C-15,45 -28,30 -30,15 C-35,-15 -25,-35 0,-55 Z" 
+          fill="url(#flameGrad)" opacity="0.9"/>
+    
+    <!-- Inner flame -->
+    <path d="M0,-35 C15,-20 20,-5 18,12 C16,22 8,32 0,38 C-8,32 -16,22 -18,12 C-20,-5 -15,-20 0,-35 Z" 
+          fill="url(#innerGrad)" opacity="0.95"/>
+    
+    <!-- Core highlight -->
+    <ellipse cx="0" cy="5" rx="8" ry="15" fill="#ffffff" opacity="0.3"/>
+  </g>
+  
+  <!-- Fitness figure silhouette -->
+  <g transform="translate(96, 100)" fill="url(#flameGrad)">
+    <!-- Person silhouette in action pose -->
+    <circle cx="0" cy="-25" r="8" fill="#0A0F1A" opacity="0.8"/>
+    <path d="M-12,-15 L-18,-5 M12,-15 L18,-5 M-5,0 L-8,20 M5,0 L8,20" 
+          stroke="#0A0F1A" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.6"/>
+  </g>
+</svg>

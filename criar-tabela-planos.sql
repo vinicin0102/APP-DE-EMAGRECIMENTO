@@ -10,15 +10,17 @@ CREATE TABLE IF NOT EXISTS plan_generations (
     plan_type VARCHAR(50) NOT NULL CHECK (plan_type IN ('home_workout', 'gym_workout', 'diet')),
     generated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     content TEXT NOT NULL,
-    
-    -- Índice único para evitar duplicatas no mesmo mês
-    CONSTRAINT unique_plan_per_month UNIQUE (user_id, plan_type, (DATE_TRUNC('month', generated_at)))
+    -- Coluna auxiliar para controle mensal
+    generation_month DATE GENERATED ALWAYS AS (DATE_TRUNC('month', generated_at)::DATE) STORED
 );
 
--- Índices
+-- Índice único para evitar duplicatas no mesmo mês
+CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_plan_per_month 
+    ON plan_generations(user_id, plan_type, generation_month);
+
+-- Outros índices
 CREATE INDEX IF NOT EXISTS idx_plan_generations_user ON plan_generations(user_id);
 CREATE INDEX IF NOT EXISTS idx_plan_generations_date ON plan_generations(generated_at);
-CREATE INDEX IF NOT EXISTS idx_plan_generations_type ON plan_generations(plan_type);
 
 -- Habilitar RLS
 ALTER TABLE plan_generations ENABLE ROW LEVEL SECURITY;
@@ -40,3 +42,4 @@ CREATE POLICY "Users can create own generations"
 COMMENT ON TABLE plan_generations IS 'Armazena gerações de planos (treino/dieta) dos usuários';
 COMMENT ON COLUMN plan_generations.plan_type IS 'Tipo: home_workout, gym_workout, diet';
 COMMENT ON COLUMN plan_generations.content IS 'Conteúdo do plano gerado';
+COMMENT ON COLUMN plan_generations.generation_month IS 'Mês da geração para controle de unicidade';

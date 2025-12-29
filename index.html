@@ -1,15 +1,123 @@
 <!doctype html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💪</text></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="description" content="SlimFit - Transforme seu corpo com o poder da comunidade. Desafios, apoio mútuo e acompanhamento personalizado." />
-    <meta name="theme-color" content="#0A0F1A" />
-    <title>SlimFit - Comunidade de Emagrecimento</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+
+  <!-- Primary Meta Tags -->
+  <title>SlimFit - Comunidade de Emagrecimento</title>
+  <meta name="title" content="SlimFit - Comunidade de Emagrecimento" />
+  <meta name="description"
+    content="Transforme seu corpo com o poder da comunidade. Desafios, apoio mútuo e acompanhamento personalizado para sua jornada de emagrecimento." />
+  <meta name="keywords"
+    content="emagrecimento, dieta, fitness, comunidade, desafios, saúde, bem-estar, perda de peso" />
+  <meta name="author" content="SlimFit" />
+
+  <!-- Viewport & Mobile Settings -->
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SlimFit" />
+  <meta name="application-name" content="SlimFit" />
+
+  <!-- Theme Colors -->
+  <meta name="theme-color" content="#0A0F1A" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#0A0F1A" media="(prefers-color-scheme: light)" />
+  <meta name="msapplication-TileColor" content="#0A0F1A" />
+  <meta name="msapplication-navbutton-color" content="#0A0F1A" />
+  <meta name="msapplication-TileImage" content="/icon-144x144.png" />
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192x192.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180x180.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="/icon-152x152.png" />
+  <link rel="apple-touch-icon" sizes="144x144" href="/icon-144x144.png" />
+  <link rel="apple-touch-icon" sizes="120x120" href="/icon-128x128.png" />
+  <link rel="mask-icon" href="/icon-512x512.svg" color="#00C853" />
+
+  <!-- iOS Splash Screens -->
+  <link rel="apple-touch-startup-image" href="/icon-512x512.png" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://slimfit.app/" />
+  <meta property="og:title" content="SlimFit - Comunidade de Emagrecimento" />
+  <meta property="og:description"
+    content="Transforme seu corpo com o poder da comunidade. Desafios, apoio mútuo e acompanhamento personalizado." />
+  <meta property="og:image" content="/icon-512x512.png" />
+  <meta property="og:locale" content="pt_BR" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://slimfit.app/" />
+  <meta property="twitter:title" content="SlimFit - Comunidade de Emagrecimento" />
+  <meta property="twitter:description"
+    content="Transforme seu corpo com o poder da comunidade. Desafios, apoio mútuo e acompanhamento personalizado." />
+  <meta property="twitter:image" content="/icon-512x512.png" />
+
+  <!-- Prevent telephone number detection -->
+  <meta name="format-detection" content="telephone=no" />
+
+  <!-- Disable text size adjustment on orientation change -->
+  <meta name="x-ua-compatible" content="IE=edge" />
+
+  <!-- Critical CSS for preventing flash -->
+  <style>
+    html,
+    body {
+      background-color: #0A0F1A !important;
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+    }
+
+    #root {
+      min-height: 100vh;
+      background-color: #0A0F1A;
+    }
+
+    /* Loading state */
+    .app-loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #0A0F1A;
+    }
+
+    .app-loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0, 200, 83, 0.1);
+      border-top-color: #00C853;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="root">
+    <!-- Loading indicator while React loads -->
+    <div class="app-loading">
+      <div class="app-loading-spinner"></div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+
 </html>
