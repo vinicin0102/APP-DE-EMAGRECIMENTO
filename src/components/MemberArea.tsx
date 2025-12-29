@@ -227,39 +227,8 @@ export default function MemberArea() {
                 </div>
             </header>
 
+
             <div className="member-content-premium">
-                {/* Hero Banner Estático */}
-                <section className="hero-banner-static">
-                    <div className="banner-image-static">
-                        <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&q=80" alt="SlimFit" />
-                        <div className="banner-overlay-static"></div>
-                    </div>
-
-                    <div className="hero-content-static">
-                        <div className="hero-badges-static">
-                            <span className="badge-exclusive">💎 EXCLUSIVO</span>
-                            <span className="badge-rating">⭐ 4.9</span>
-                        </div>
-
-                        <h1 className="hero-title-static">
-                            Sua Jornada de<br />
-                            <span className="title-highlight">Transformação</span>
-                        </h1>
-
-                        <p className="hero-description-static">
-                            Acesse {totalLessons} aulas exclusivas em {modules.length} módulos
-                        </p>
-
-                        <div className="hero-buttons-static">
-                            <button className="btn-start-static" onClick={() => {
-                                const firstIncomplete = modules[0]?.lessons.find(l => !l.completed && !l.locked)
-                                if (firstIncomplete) setSelectedLesson(firstIncomplete)
-                            }}>
-                                ▶ Começar Agora
-                            </button>
-                        </div>
-                    </div>
-                </section>
 
                 {/* Continue Assistindo */}
                 {continueWatching.length > 0 && (
