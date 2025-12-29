@@ -15,13 +15,27 @@ interface PostWithComments {
 
 export default function Feed() {
     const { user, profile } = useAuth()
-    const { posts, loading, createPost, likePost, refetch } = usePosts()
+    const { posts, loading: postsLoading, createPost, likePost, refetch } = usePosts()
     const [newPost, setNewPost] = useState('')
     const [imageUrl, setImageUrl] = useState('')
     const [showImageInput, setShowImageInput] = useState(false)
     const [posting, setPosting] = useState(false)
     const [localLikes, setLocalLikes] = useState<Record<string, boolean>>({})
     const [postExtras, setPostExtras] = useState<Record<string, PostWithComments>>({})
+    const [forceLoaded, setForceLoaded] = useState(false)
+
+    // Timeout de segurança - força carregamento após 5 segundos
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (postsLoading) {
+                console.warn('Feed: Timeout de loading atingido, forçando carregamento')
+                setForceLoaded(true)
+            }
+        }, 5000)
+        return () => clearTimeout(timeout)
+    }, [postsLoading])
+
+    const loading = postsLoading && !forceLoaded
 
     // Dados estáticos de exemplo
     const staticPosts = [
@@ -192,7 +206,7 @@ export default function Feed() {
         <div className="feed-page">
             <header className="page-header">
                 <div className="feed-header">
-                    <h1>Slim<span className="gradient-text">Fit</span></h1>
+                    <h1>Clube das <span className="gradient-text">Musas</span></h1>
                 </div>
             </header>
 

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDailyLogs } from '../hooks/useDailyLogs'
 import { useWeightLogs } from '../hooks/useWeightLogs'
 import './ProgressTracker.css'
@@ -18,8 +18,20 @@ export default function ProgressTracker() {
     const [newWeight, setNewWeight] = useState('')
     const [weightNote, setWeightNote] = useState('')
     const [showWeightModal, setShowWeightModal] = useState(false)
+    const [forceLoaded, setForceLoaded] = useState(false)
 
-    const loading = logsLoading || weightLoading
+    // Timeout de segurança - força carregamento após 5 segundos
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (logsLoading || weightLoading) {
+                console.warn('ProgressTracker: Timeout de loading atingido, forçando carregamento')
+                setForceLoaded(true)
+            }
+        }, 5000)
+        return () => clearTimeout(timeout)
+    }, [logsLoading, weightLoading])
+
+    const loading = (logsLoading || weightLoading) && !forceLoaded
 
     const handleToggle = async (field: 'ate_healthy' | 'trained' | 'drank_water') => {
         await toggleCheck(field)
@@ -297,7 +309,7 @@ export default function ProgressTracker() {
                                         </div>
                                         {index > 0 && (
                                             <span className={`weight-item-diff ${log.weight < weightLogs[index - 1]?.weight ? 'positive' :
-                                                    log.weight > weightLogs[index - 1]?.weight ? 'negative' : ''
+                                                log.weight > weightLogs[index - 1]?.weight ? 'negative' : ''
                                                 }`}>
                                                 {log.weight < weightLogs[index - 1]?.weight ? '↓' :
                                                     log.weight > weightLogs[index - 1]?.weight ? '↑' : '='}
