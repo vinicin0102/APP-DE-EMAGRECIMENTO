@@ -507,3 +507,432 @@
         font-size: 0.8rem;
     }
 }
+
+/* ================================================
+   CHALLENGES HEADER
+   ================================================ */
+
+.challenges-header {
+    text-align: center;
+    padding: calc(var(--spacing-xl) + env(safe-area-inset-top, 0)) var(--spacing-lg) var(--spacing-lg);
+    background: linear-gradient(180deg, rgba(255, 20, 147, 0.08) 0%, transparent 100%);
+}
+
+.challenges-header h1 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: var(--spacing-xs);
+}
+
+.challenges-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* ================================================
+   USER BADGES SECTION
+   ================================================ */
+
+.user-badges-section {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 20, 147, 0.05));
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.user-badges-section h3 {
+    font-size: 1rem;
+    margin-bottom: var(--spacing-md);
+}
+
+.badges-row {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.badge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    background: var(--bg-glass);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    min-width: 80px;
+    transition: all 0.3s ease;
+}
+
+.badge-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.2);
+}
+
+.badge-icon {
+    font-size: 2rem;
+}
+
+.badge-name {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+/* Stat Icon Emoji */
+.stat-icon-emoji {
+    font-size: 1.5rem;
+}
+
+.premium-stat {
+    background: linear-gradient(135deg, rgba(255, 20, 147, 0.1), rgba(255, 105, 180, 0.05)) !important;
+    border-color: rgba(255, 20, 147, 0.2) !important;
+}
+
+/* Premium Tab */
+.filter-tab.premium-tab.active::before {
+    background: linear-gradient(135deg, #FF1493, #FF69B4);
+}
+
+/* ================================================
+   PREMIUM CHALLENGE CARD
+   ================================================ */
+
+.challenge-card-full.premium {
+    background: linear-gradient(135deg, rgba(255, 20, 147, 0.08) 0%, rgba(255, 105, 180, 0.03) 100%);
+    border-color: rgba(255, 20, 147, 0.2);
+}
+
+.challenge-card-full.premium::before {
+    background: linear-gradient(180deg, #FF1493, #FF69B4);
+}
+
+.challenge-card-full.completed {
+    opacity: 0.8;
+}
+
+.challenge-card-full.completed::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), transparent);
+    border-radius: inherit;
+    pointer-events: none;
+}
+
+/* Premium Badge */
+.premium-badge {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    color: #000;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+}
+
+.completed-badge {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+}
+
+/* ================================================
+   PURCHASE BUTTON
+   ================================================ */
+
+.btn-purchase-challenge {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    border: none;
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3);
+}
+
+.btn-purchase-challenge::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent 40%, rgba(255, 255, 255, 0.2) 50%, transparent 60%);
+    animation: shineEffect 3s infinite;
+}
+
+@keyframes shineEffect {
+    0% {
+        transform: translateX(-100%) translateY(-100%);
+    }
+
+    100% {
+        transform: translateX(100%) translateY(100%);
+    }
+}
+
+.price-tag {
+    font-size: 1.3rem;
+    font-weight: 800;
+}
+
+.btn-purchase-challenge:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+}
+
+/* ================================================
+   ACTIVE CHALLENGE SECTION
+   ================================================ */
+
+.active-challenge-section {
+    text-align: center;
+}
+
+.active-label {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-bottom: var(--spacing-md);
+}
+
+.btn-complete-challenge {
+    width: 100%;
+    background: linear-gradient(135deg, #4CAF50, #66BB6A);
+    border: none;
+    color: white;
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-complete-challenge:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+}
+
+/* ================================================
+   COMPLETED SECTION
+   ================================================ */
+
+.completed-section {
+    text-align: center;
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), transparent);
+    border-radius: var(--radius-lg);
+}
+
+.completed-icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: var(--spacing-sm);
+}
+
+.completed-section p {
+    color: #4CAF50;
+    font-weight: 600;
+}
+
+/* ================================================
+   NO CHALLENGES
+   ================================================ */
+
+.no-challenges {
+    text-align: center;
+    padding: var(--spacing-3xl);
+    color: var(--text-muted);
+}
+
+.no-challenges span {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: var(--spacing-md);
+}
+
+/* ================================================
+   PURCHASE MODAL
+   ================================================ */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--spacing-lg);
+}
+
+.modal-content {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-2xl);
+    max-width: 420px;
+    width: 100%;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-close {
+    position: absolute;
+    top: var(--spacing-md);
+    right: var(--spacing-md);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-glass);
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+    background: var(--bg-glass-strong);
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+.purchase-modal .purchase-header {
+    text-align: center;
+    margin-bottom: var(--spacing-lg);
+}
+
+.purchase-emoji {
+    font-size: 4rem;
+    display: block;
+    margin-bottom: var(--spacing-md);
+}
+
+.purchase-modal h2 {
+    font-size: 1.3rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.purchase-desc {
+    color: var(--text-muted);
+    text-align: center;
+    margin-bottom: var(--spacing-xl);
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.purchase-benefits {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.purchase-benefits h4 {
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--text-secondary);
+}
+
+.purchase-benefits ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.purchase-benefits li {
+    font-size: 0.9rem;
+    color: var(--text-primary);
+}
+
+.purchase-price {
+    text-align: center;
+    padding: var(--spacing-lg);
+    background: linear-gradient(135deg, rgba(255, 20, 147, 0.1), rgba(255, 105, 180, 0.05));
+    border: 1px solid rgba(255, 20, 147, 0.2);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.price-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-xs);
+}
+
+.price-value {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.btn-confirm-purchase {
+    width: 100%;
+    background: var(--primary-gradient);
+    border: none;
+    color: white;
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    box-shadow: 0 6px 25px rgba(255, 20, 147, 0.4);
+}
+
+.btn-confirm-purchase:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 35px rgba(255, 20, 147, 0.5);
+}
+
+.purchase-note {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: var(--spacing-md);
+}

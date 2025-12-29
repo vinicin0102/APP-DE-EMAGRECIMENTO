@@ -9,6 +9,7 @@ import Feed from './components/Feed'
 import MemberArea from './components/MemberArea'
 import PlanGenerator from './components/PlanGenerator'
 import ChallengesPage from './components/ChallengesPage'
+import ProgressTracker from './components/ProgressTracker'
 import ProfilePage from './components/ProfilePage'
 import Support from './components/Support'
 import AdminPanel from './components/AdminPanel'
@@ -133,7 +134,7 @@ function App() {
       <main className="main-content">
         {activeTab === 'feed' && <Feed />}
         {activeTab === 'lessons' && <MemberArea />}
-        {activeTab === 'plans' && <PlanGenerator />}
+        {activeTab === 'progress' && <ProgressTracker />}
         {activeTab === 'challenges' && <ChallengesPage />}
         {activeTab === 'profile' && <ProfilePage />}
         {activeTab === 'support' && <Support />}

@@ -3,125 +3,227 @@ import { useAuth } from '../contexts/AuthContext'
 import { useChallenges } from '../hooks/useChallenges'
 import './ChallengesPage.css'
 
-const staticChallenges = [
+interface PremiumChallenge {
+    id: string
+    title: string
+    description: string
+    participants_count: number
+    duration_days: number
+    difficulty: 'Fácil' | 'Intermediário' | 'Avançado'
+    reward_points: number
+    color: string
+    emoji: string
+    badge_icon: string
+    badge_name: string
+    is_premium: boolean
+    price: number
+    start_date: string
+    end_date: string
+}
+
+const premiumChallenges: PremiumChallenge[] = [
     {
-        id: '1',
-        title: 'Desafio 30 Dias Sem Açúcar',
-        description: 'Elimine o açúcar refinado da sua alimentação por 30 dias.',
-        participants_count: 2340,
+        id: 'premium-1',
+        title: '🔥 Desafio Transformação 30 Dias',
+        description: 'O desafio definitivo! Treino + dieta + mentalidade para transformar seu corpo em 30 dias.',
+        participants_count: 1240,
         duration_days: 30,
-        difficulty: 'Intermediário' as const,
-        reward_points: 500,
-        color: '#FF4081',
-        emoji: '🍬',
+        difficulty: 'Avançado',
+        reward_points: 1000,
+        color: '#FF1493',
+        emoji: '🔥',
+        badge_icon: '👑',
+        badge_name: 'Rainha da Transformação',
+        is_premium: true,
+        price: 47.00,
         start_date: new Date().toISOString(),
         end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: ''
     },
     {
-        id: '2',
-        title: '10.000 Passos Diários',
-        description: 'Caminhe pelo menos 10.000 passos todos os dias.',
-        participants_count: 5120,
+        id: 'premium-2',
+        title: '💪 Desafio Mamãe Fitness',
+        description: 'Treinos especiais para mães retomarem a forma. Com adaptações para rotina corrida.',
+        participants_count: 2890,
         duration_days: 21,
-        difficulty: 'Fácil' as const,
-        reward_points: 300,
-        color: '#00C853',
-        emoji: '👟',
+        difficulty: 'Intermediário',
+        reward_points: 750,
+        color: '#9C27B0',
+        emoji: '💪',
+        badge_icon: '🦋',
+        badge_name: 'Musa Fitness',
+        is_premium: true,
+        price: 37.00,
         start_date: new Date().toISOString(),
         end_date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: ''
     },
     {
-        id: '3',
-        title: 'Jejum Intermitente 16:8',
-        description: 'Pratique o jejum intermitente de 16 horas por dia.',
-        participants_count: 1890,
+        id: 'premium-3',
+        title: '🧘 Desafio Mente & Corpo',
+        description: 'Equilíbrio entre exercícios, meditação e alimentação consciente.',
+        participants_count: 1560,
         duration_days: 14,
-        difficulty: 'Avançado' as const,
-        reward_points: 400,
-        color: '#7C4DFF',
-        emoji: '⏰',
+        difficulty: 'Fácil',
+        reward_points: 500,
+        color: '#00BCD4',
+        emoji: '🧘',
+        badge_icon: '✨',
+        badge_name: 'Musa Zen',
+        is_premium: true,
+        price: 27.00,
         start_date: new Date().toISOString(),
         end_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: ''
     },
+]
+
+const freeChallenges: PremiumChallenge[] = [
     {
-        id: '4',
+        id: 'free-1',
         title: 'Hidratação Total',
-        description: 'Beba pelo menos 2 litros de água por dia.',
+        description: 'Beba pelo menos 2 litros de água por dia durante 7 dias.',
         participants_count: 8750,
         duration_days: 7,
-        difficulty: 'Fácil' as const,
-        reward_points: 150,
-        color: '#2979FF',
+        difficulty: 'Fácil',
+        reward_points: 100,
+        color: '#2196F3',
         emoji: '💧',
+        badge_icon: '💧',
+        badge_name: 'Hidratada',
+        is_premium: false,
+        price: 0,
         start_date: new Date().toISOString(),
         end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        created_at: ''
+    },
+    {
+        id: 'free-2',
+        title: '10.000 Passos',
+        description: 'Caminhe 10.000 passos todos os dias por uma semana.',
+        participants_count: 6320,
+        duration_days: 7,
+        difficulty: 'Fácil',
+        reward_points: 100,
+        color: '#4CAF50',
+        emoji: '👟',
+        badge_icon: '🚶',
+        badge_name: 'Caminhante',
+        is_premium: false,
+        price: 0,
+        start_date: new Date().toISOString(),
+        end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     },
 ]
 
 export default function ChallengesPage() {
-    const { user } = useAuth()
+    const { user, profile } = useAuth()
     const { challenges, loading, joinChallenge, isParticipating, getProgress, updateProgress } = useChallenges()
-    const [activeFilter, setActiveFilter] = useState<'all' | 'active' | 'completed'>('all')
+    const [activeFilter, setActiveFilter] = useState<'premium' | 'free' | 'active'>('premium')
+    const [selectedChallenge, setSelectedChallenge] = useState<PremiumChallenge | null>(null)
+    const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+    const [purchasedChallenges, setPurchasedChallenges] = useState<string[]>(() => {
+        const saved = localStorage.getItem('purchased_challenges')
+        return saved ? JSON.parse(saved) : []
+    })
+    const [completedChallenges, setCompletedChallenges] = useState<string[]>(() => {
+        const saved = localStorage.getItem('completed_challenges')
+        return saved ? JSON.parse(saved) : []
+    })
+    const [userBadges, setUserBadges] = useState<{ icon: string, name: string }[]>(() => {
+        const saved = localStorage.getItem('user_badges')
+        return saved ? JSON.parse(saved) : []
+    })
 
-    const displayChallenges = challenges.length > 0 ? challenges : staticChallenges
+    const allChallenges = [...premiumChallenges, ...freeChallenges]
 
-    const handleJoin = async (challengeId: string) => {
-        if (!user) return
-        await joinChallenge(challengeId)
+    const handlePurchase = (challenge: PremiumChallenge) => {
+        setSelectedChallenge(challenge)
+        setShowPurchaseModal(true)
     }
 
-    const handleUpdateProgress = async (challengeId: string) => {
-        const currentProgress = getProgress(challengeId)
-        const newProgress = Math.min(100, currentProgress + 10)
-        await updateProgress(challengeId, newProgress)
+    const confirmPurchase = () => {
+        if (!selectedChallenge) return
+
+        // Adicionar aos desafios comprados
+        const updated = [...purchasedChallenges, selectedChallenge.id]
+        setPurchasedChallenges(updated)
+        localStorage.setItem('purchased_challenges', JSON.stringify(updated))
+
+        setShowPurchaseModal(false)
+        setSelectedChallenge(null)
     }
+
+    const handleJoinFree = async (challengeId: string) => {
+        // Para desafios gratuitos
+        const updated = [...purchasedChallenges, challengeId]
+        setPurchasedChallenges(updated)
+        localStorage.setItem('purchased_challenges', JSON.stringify(updated))
+    }
+
+    const handleComplete = (challenge: PremiumChallenge) => {
+        // Marcar como concluído
+        const updatedCompleted = [...completedChallenges, challenge.id]
+        setCompletedChallenges(updatedCompleted)
+        localStorage.setItem('completed_challenges', JSON.stringify(updatedCompleted))
+
+        // Adicionar badge
+        const newBadge = { icon: challenge.badge_icon, name: challenge.badge_name }
+        const updatedBadges = [...userBadges, newBadge]
+        setUserBadges(updatedBadges)
+        localStorage.setItem('user_badges', JSON.stringify(updatedBadges))
+    }
+
+    const isPurchased = (challengeId: string) => purchasedChallenges.includes(challengeId)
+    const isCompleted = (challengeId: string) => completedChallenges.includes(challengeId)
+
+    const filteredChallenges = allChallenges.filter(challenge => {
+        if (activeFilter === 'premium') return challenge.is_premium
+        if (activeFilter === 'free') return !challenge.is_premium
+        if (activeFilter === 'active') return isPurchased(challenge.id) && !isCompleted(challenge.id)
+        return true
+    })
 
     return (
         <div className="challenges-page">
-            <header className="page-header">
-                <h1>Desafios</h1>
+            <header className="challenges-header">
+                <h1>🏆 Desafios</h1>
+                <p>Transforme-se e ganhe destaque na comunidade</p>
             </header>
 
             <div className="page-container">
-                {/* Stats Cards */}
-                <div className="challenge-stats">
-                    <div className="challenge-stat-card">
-                        <div className="stat-icon-svg">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <circle cx="12" cy="8" r="6" />
-                                <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
-                            </svg>
+                {/* User Badges */}
+                {userBadges.length > 0 && (
+                    <div className="user-badges-section">
+                        <h3>🎖️ Suas Conquistas</h3>
+                        <div className="badges-row">
+                            {userBadges.map((badge, index) => (
+                                <div key={index} className="badge-item" title={badge.name}>
+                                    <span className="badge-icon">{badge.icon}</span>
+                                    <span className="badge-name">{badge.name}</span>
+                                </div>
+                            ))}
                         </div>
+                    </div>
+                )}
+
+                {/* Stats */}
+                <div className="challenge-stats">
+                    <div className="challenge-stat-card premium-stat">
+                        <div className="stat-icon-emoji">🔥</div>
                         <div className="stat-info">
-                            <span className="stat-value">3</span>
-                            <span className="stat-label">Ativos</span>
+                            <span className="stat-value">{purchasedChallenges.filter(id => premiumChallenges.some(c => c.id === id)).length}</span>
+                            <span className="stat-label">Premium</span>
                         </div>
                     </div>
                     <div className="challenge-stat-card">
-                        <div className="stat-icon-svg completed">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-                                <polyline points="22,4 12,14.01 9,11.01" />
-                            </svg>
-                        </div>
+                        <div className="stat-icon-emoji">✅</div>
                         <div className="stat-info">
-                            <span className="stat-value">12</span>
+                            <span className="stat-value">{completedChallenges.length}</span>
                             <span className="stat-label">Concluídos</span>
                         </div>
                     </div>
                     <div className="challenge-stat-card">
-                        <div className="stat-icon-svg points">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26" />
-                            </svg>
-                        </div>
+                        <div className="stat-icon-emoji">🏅</div>
                         <div className="stat-info">
-                            <span className="stat-value">2.4k</span>
-                            <span className="stat-label">Pontos</span>
+                            <span className="stat-value">{userBadges.length}</span>
+                            <span className="stat-label">Badges</span>
                         </div>
                     </div>
                 </div>
@@ -129,116 +231,179 @@ export default function ChallengesPage() {
                 {/* Filter Tabs */}
                 <div className="filter-tabs">
                     <button
-                        className={`filter-tab ${activeFilter === 'all' ? 'active' : ''}`}
-                        onClick={() => setActiveFilter('all')}
+                        className={`filter-tab premium-tab ${activeFilter === 'premium' ? 'active' : ''}`}
+                        onClick={() => setActiveFilter('premium')}
                     >
-                        Todos
+                        🔥 Premium
+                    </button>
+                    <button
+                        className={`filter-tab ${activeFilter === 'free' ? 'active' : ''}`}
+                        onClick={() => setActiveFilter('free')}
+                    >
+                        🆓 Gratuitos
                     </button>
                     <button
                         className={`filter-tab ${activeFilter === 'active' ? 'active' : ''}`}
                         onClick={() => setActiveFilter('active')}
                     >
-                        Participando
-                    </button>
-                    <button
-                        className={`filter-tab ${activeFilter === 'completed' ? 'active' : ''}`}
-                        onClick={() => setActiveFilter('completed')}
-                    >
-                        Concluídos
+                        📍 Meus
                     </button>
                 </div>
 
                 {/* Challenges List */}
-                {loading ? (
-                    <div className="loading-challenges">
-                        <span>🔄</span>
-                        <p>Carregando desafios...</p>
-                    </div>
-                ) : (
-                    <div className="challenges-list">
-                        {displayChallenges.map(challenge => {
-                            const participating = isParticipating(challenge.id)
-                            const progress = getProgress(challenge.id)
+                <div className="challenges-list">
+                    {filteredChallenges.map(challenge => {
+                        const purchased = isPurchased(challenge.id)
+                        const completed = isCompleted(challenge.id)
 
-                            if (activeFilter === 'active' && !participating) return null
-                            if (activeFilter === 'completed' && progress < 100) return null
-
-                            return (
-                                <div key={challenge.id} className="challenge-card-full">
-                                    <div className="challenge-header-full">
-                                        <div
-                                            className="challenge-emoji-big"
-                                            style={{ background: `${challenge.color}20` }}
-                                        >
-                                            {challenge.emoji}
-                                        </div>
-                                        <div className="challenge-info-full">
-                                            <div className="challenge-badges">
-                                                <span
-                                                    className="difficulty-badge"
-                                                    style={{ background: `${challenge.color}20`, color: challenge.color }}
-                                                >
-                                                    {challenge.difficulty}
-                                                </span>
-                                                <span className="duration-badge">{challenge.duration_days} dias</span>
-                                            </div>
-                                            <h3>{challenge.title}</h3>
-                                            <p>{challenge.description}</p>
-                                        </div>
+                        return (
+                            <div
+                                key={challenge.id}
+                                className={`challenge-card-full ${challenge.is_premium ? 'premium' : ''} ${completed ? 'completed' : ''}`}
+                            >
+                                {challenge.is_premium && !purchased && (
+                                    <div className="premium-badge">
+                                        <span>👑 PREMIUM</span>
                                     </div>
+                                )}
 
-                                    <div className="challenge-stats-row">
-                                        <div className="stat-item">
-                                            <span>👥</span>
-                                            <span>{challenge.participants_count.toLocaleString()}</span>
-                                        </div>
-                                        <div className="stat-item">
-                                            <span>🏆</span>
-                                            <span>{challenge.reward_points} pts</span>
-                                        </div>
-                                        <div className="stat-item">
-                                            <span>📅</span>
-                                            <span>{challenge.duration_days}d restantes</span>
-                                        </div>
+                                {completed && (
+                                    <div className="completed-badge">
+                                        <span>✅ CONCLUÍDO</span>
                                     </div>
+                                )}
 
-                                    {participating && (
-                                        <div className="progress-section">
-                                            <div className="progress-header">
-                                                <span>Seu progresso</span>
-                                                <span style={{ color: challenge.color }}>{progress}%</span>
-                                            </div>
-                                            <div className="progress-bar-full">
-                                                <div
-                                                    className="progress-fill"
-                                                    style={{ width: `${progress}%`, background: challenge.color }}
-                                                />
-                                            </div>
-                                            <button
-                                                className="btn-update-progress"
-                                                onClick={() => handleUpdateProgress(challenge.id)}
-                                                disabled={progress >= 100}
+                                <div className="challenge-header-full">
+                                    <div
+                                        className="challenge-emoji-big"
+                                        style={{ background: `${challenge.color}20` }}
+                                    >
+                                        {challenge.emoji}
+                                    </div>
+                                    <div className="challenge-info-full">
+                                        <div className="challenge-badges">
+                                            <span
+                                                className="difficulty-badge"
+                                                style={{ background: `${challenge.color}20`, color: challenge.color }}
                                             >
-                                                {progress >= 100 ? '✓ Concluído!' : '+ Registrar Progresso'}
-                                            </button>
+                                                {challenge.difficulty}
+                                            </span>
+                                            <span className="duration-badge">{challenge.duration_days} dias</span>
                                         </div>
-                                    )}
-
-                                    {!participating && (
-                                        <button
-                                            className="btn-join-challenge"
-                                            style={{ background: challenge.color }}
-                                            onClick={() => handleJoin(challenge.id)}
-                                        >
-                                            Participar do Desafio
-                                        </button>
-                                    )}
+                                        <h3>{challenge.title}</h3>
+                                        <p>{challenge.description}</p>
+                                    </div>
                                 </div>
-                            )
-                        })}
-                    </div>
-                )}
+
+                                <div className="challenge-stats-row">
+                                    <div className="stat-item">
+                                        <span>👥</span>
+                                        <span>{challenge.participants_count.toLocaleString()}</span>
+                                    </div>
+                                    <div className="stat-item">
+                                        <span>{challenge.badge_icon}</span>
+                                        <span>{challenge.badge_name}</span>
+                                    </div>
+                                    <div className="stat-item">
+                                        <span>⭐</span>
+                                        <span>{challenge.reward_points} pts</span>
+                                    </div>
+                                </div>
+
+                                {/* Action Buttons */}
+                                {!purchased && !completed && (
+                                    <>
+                                        {challenge.is_premium ? (
+                                            <button
+                                                className="btn-purchase-challenge"
+                                                style={{ background: challenge.color }}
+                                                onClick={() => handlePurchase(challenge)}
+                                            >
+                                                <span className="price-tag">R$ {challenge.price.toFixed(2)}</span>
+                                                <span>Comprar Desafio</span>
+                                            </button>
+                                        ) : (
+                                            <button
+                                                className="btn-join-challenge"
+                                                style={{ background: challenge.color }}
+                                                onClick={() => handleJoinFree(challenge.id)}
+                                            >
+                                                Participar Grátis
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+
+                                {purchased && !completed && (
+                                    <div className="active-challenge-section">
+                                        <p className="active-label">✨ Você está participando!</p>
+                                        <button
+                                            className="btn-complete-challenge"
+                                            onClick={() => handleComplete(challenge)}
+                                        >
+                                            {challenge.badge_icon} Marcar como Concluído
+                                        </button>
+                                    </div>
+                                )}
+
+                                {completed && (
+                                    <div className="completed-section">
+                                        <span className="completed-icon">{challenge.badge_icon}</span>
+                                        <p>Parabéns! Você ganhou o badge "{challenge.badge_name}"!</p>
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    })}
+
+                    {filteredChallenges.length === 0 && (
+                        <div className="no-challenges">
+                            <span>🔍</span>
+                            <p>Nenhum desafio encontrado nesta categoria</p>
+                        </div>
+                    )}
+                </div>
             </div>
+
+            {/* Purchase Modal */}
+            {showPurchaseModal && selectedChallenge && (
+                <div className="modal-overlay" onClick={() => setShowPurchaseModal(false)}>
+                    <div className="modal-content purchase-modal" onClick={e => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setShowPurchaseModal(false)}>×</button>
+
+                        <div className="purchase-header">
+                            <span className="purchase-emoji">{selectedChallenge.emoji}</span>
+                            <h2>{selectedChallenge.title}</h2>
+                        </div>
+
+                        <p className="purchase-desc">{selectedChallenge.description}</p>
+
+                        <div className="purchase-benefits">
+                            <h4>O que você ganha:</h4>
+                            <ul>
+                                <li>✅ Acesso completo ao desafio de {selectedChallenge.duration_days} dias</li>
+                                <li>✅ Guia passo a passo exclusivo</li>
+                                <li>✅ Badge "{selectedChallenge.badge_name}" ao concluir</li>
+                                <li>✅ {selectedChallenge.reward_points} pontos de recompensa</li>
+                                <li>✅ Destaque na comunidade</li>
+                            </ul>
+                        </div>
+
+                        <div className="purchase-price">
+                            <span className="price-label">Investimento único:</span>
+                            <span className="price-value">R$ {selectedChallenge.price.toFixed(2)}</span>
+                        </div>
+
+                        <button className="btn-confirm-purchase" onClick={confirmPurchase}>
+                            Comprar Agora 🚀
+                        </button>
+
+                        <p className="purchase-note">
+                            💳 Pagamento seguro • Acesso imediato
+                        </p>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
