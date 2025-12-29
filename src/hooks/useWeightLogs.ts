@@ -7,21 +7,32 @@ export function useWeightLogs() {
     const [loading, setLoading] = useState(true)
 
     const fetchLogs = async () => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) {
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                setLoading(false)
+                return
+            }
+
+            const { data, error } = await supabase
+                .from('weight_logs')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('logged_at', { ascending: false })
+                .limit(30)
+
+            if (error) {
+                console.warn('Tabela weight_logs não encontrada ou erro:', error.message)
+                setLogs([])
+            } else {
+                setLogs(data || [])
+            }
+        } catch (error) {
+            console.error('Erro ao buscar logs de peso:', error)
+            setLogs([])
+        } finally {
             setLoading(false)
-            return
         }
-
-        const { data } = await supabase
-            .from('weight_logs')
-            .select('*')
-            .eq('user_id', user.id)
-            .order('logged_at', { ascending: false })
-            .limit(30)
-
-        setLogs(data || [])
-        setLoading(false)
     }
 
     useEffect(() => {

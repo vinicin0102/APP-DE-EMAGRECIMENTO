@@ -9,31 +9,48 @@ export function useChallenges() {
     const [error, setError] = useState<Error | null>(null)
 
     const fetchChallenges = async () => {
-        setLoading(true)
-        const { data, error } = await supabase
-            .from('challenges')
-            .select('*')
-            .gte('end_date', new Date().toISOString())
-            .order('participants_count', { ascending: false })
+        try {
+            setLoading(true)
+            const { data, error } = await supabase
+                .from('challenges')
+                .select('*')
+                .gte('end_date', new Date().toISOString())
+                .order('participants_count', { ascending: false })
 
-        if (error) {
-            setError(error)
-        } else {
-            setChallenges(data || [])
+            if (error) {
+                console.warn('Tabela challenges não encontrada ou erro:', error.message)
+                setChallenges([])
+            } else {
+                setChallenges(data || [])
+            }
+        } catch (err) {
+            console.error('Erro ao buscar desafios:', err)
+            setChallenges([])
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     const fetchUserChallenges = async () => {
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) return
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
 
-        const { data } = await supabase
-            .from('challenge_participants')
-            .select('*')
-            .eq('user_id', user.id)
+            const { data, error } = await supabase
+                .from('challenge_participants')
+                .select('*')
+                .eq('user_id', user.id)
 
-        setUserChallenges(data || [])
+            if (error) {
+                console.warn('Tabela challenge_participants não encontrada ou erro:', error.message)
+                setUserChallenges([])
+            } else {
+                setUserChallenges(data || [])
+            }
+        } catch (err) {
+            console.error('Erro ao buscar participações:', err)
+            setUserChallenges([])
+        }
     }
 
     useEffect(() => {

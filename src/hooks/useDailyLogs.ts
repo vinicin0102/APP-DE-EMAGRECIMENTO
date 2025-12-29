@@ -40,25 +40,36 @@ export function useDailyLogs() {
             }
 
             // Buscar log de hoje
-            const { data: todayData } = await supabase
+            const { data: todayData, error: todayError } = await supabase
                 .from('daily_logs')
                 .select('*')
                 .eq('user_id', user.id)
                 .eq('log_date', today)
                 .single()
 
-            setTodayLog(todayData)
+            if (todayError && todayError.code !== 'PGRST116') {
+                // PGRST116 = No rows returned (normal quando não tem log)
+                console.warn('Erro ao buscar log de hoje:', todayError.message)
+            }
+            setTodayLog(todayData || null)
 
             // Buscar logs da semana (últimos 7 dias)
             const weekStart = new Date()
             weekStart.setDate(weekStart.getDate() - 6)
-            const { data: weekData } = await supabase
+            const { data: weekData, error: weekError } = await supabase
                 .from('daily_logs')
                 .select('*')
                 .eq('user_id', user.id)
                 .gte('log_date', weekStart.toISOString().split('T')[0])
                 .order('log_date', { ascending: false })
 
+            if (weekError) {
+                console.warn('Tabela daily_logs não encontrada:', weekError.message)
+                setWeekLogs([])
+                setMonthLogs([])
+                setLoading(false)
+                return
+            }
             setWeekLogs(weekData || [])
 
             // Buscar logs do mês (últimos 30 dias)
@@ -78,6 +89,9 @@ export function useDailyLogs() {
 
         } catch (error) {
             console.error('Erro ao buscar logs diários:', error)
+            setTodayLog(null)
+            setWeekLogs([])
+            setMonthLogs([])
         } finally {
             setLoading(false)
         }

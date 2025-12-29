@@ -8,22 +8,29 @@ export function usePosts() {
     const [error, setError] = useState<Error | null>(null)
 
     const fetchPosts = async () => {
-        setLoading(true)
-        const { data, error } = await supabase
-            .from('posts')
-            .select(`
-        *,
-        user:users(*)
-      `)
-            .order('created_at', { ascending: false })
-            .limit(20)
+        try {
+            setLoading(true)
+            const { data, error } = await supabase
+                .from('posts')
+                .select(`
+            *,
+            user:users(*)
+          `)
+                .order('created_at', { ascending: false })
+                .limit(20)
 
-        if (error) {
-            setError(error)
-        } else {
-            setPosts(data || [])
+            if (error) {
+                console.warn('Erro ao buscar posts:', error.message)
+                setPosts([])
+            } else {
+                setPosts(data || [])
+            }
+        } catch (err) {
+            console.error('Erro ao buscar posts:', err)
+            setPosts([])
+        } finally {
+            setLoading(false)
         }
-        setLoading(false)
     }
 
     useEffect(() => {
