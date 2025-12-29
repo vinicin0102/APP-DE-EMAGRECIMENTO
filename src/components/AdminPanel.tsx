@@ -195,9 +195,102 @@ export default function AdminPanel() {
         fetchData()
     }
 
-    const banUser = async (userId: string, userName: string) => {
-        await supabase.from('users').update({ points: -9999 }).eq('id', userId)
-        addLog(`Baniu usuário: ${userName}`)
+    // Ban system states
+    const [showBanModal, setShowBanModal] = useState(false)
+    const [banningUser, setBanningUser] = useState<User | null>(null)
+
+    const openBanModal = (user: User) => {
+        setBanningUser(user)
+        setShowBanModal(true)
+    }
+
+    const calculateBanEndDate = (hours: number) => {
+        return new Date(Date.now() + hours * 60 * 60 * 1000).toISOString()
+    }
+
+    // Ban do Feed por 3 dias
+    const banFromFeed = async (userId: string, userName: string) => {
+        const banEnd = calculateBanEndDate(72) // 3 dias = 72 horas
+        await supabase.from('users').update({
+            feed_banned_until: banEnd
+        }).eq('id', userId)
+        addLog(`Baniu ${userName} do Feed por 3 dias`)
+        setShowBanModal(false)
+        fetchData()
+    }
+
+    // Ban do App por 24 horas
+    const banFromApp24h = async (userId: string, userName: string) => {
+        const banEnd = calculateBanEndDate(24)
+        await supabase.from('users').update({
+            banned_until: banEnd,
+            ban_reason: 'Banido por 24 horas'
+        }).eq('id', userId)
+        addLog(`Baniu ${userName} do App por 24 horas`)
+        setShowBanModal(false)
+        fetchData()
+    }
+
+    // Ban do App por 7 dias
+    const banFromApp7d = async (userId: string, userName: string) => {
+        const banEnd = calculateBanEndDate(7 * 24) // 7 dias
+        await supabase.from('users').update({
+            banned_until: banEnd,
+            ban_reason: 'Banido por 7 dias'
+        }).eq('id', userId)
+        addLog(`Baniu ${userName} do App por 7 dias`)
+        setShowBanModal(false)
+        fetchData()
+    }
+
+    // Ban permanente
+    const banPermanently = async (userId: string, userName: string) => {
+        if (!confirm(`⚠️ ATENÇÃO: Banir ${userName} PERMANENTEMENTE? Esta ação é séria.`)) return
+        await supabase.from('users').update({
+            is_banned: true,
+            banned_until: null,
+            ban_reason: 'Banido permanentemente'
+        }).eq('id', userId)
+        addLog(`Baniu ${userName} PERMANENTEMENTE`)
+        setShowBanModal(false)
+        fetchData()
+    }
+
+    // Mutar usuário (não pode postar/comentar)
+    const muteUser = async (userId: string, userName: string) => {
+        const muteEnd = calculateBanEndDate(72) // 3 dias mudo
+        await supabase.from('users').update({
+            is_muted: true,
+            muted_until: muteEnd
+        }).eq('id', userId)
+        addLog(`Mutou ${userName} por 3 dias`)
+        setShowBanModal(false)
+        fetchData()
+    }
+
+    // Desbanir usuário
+    const unbanUser = async (userId: string, userName: string) => {
+        await supabase.from('users').update({
+            is_banned: false,
+            banned_until: null,
+            feed_banned_until: null,
+            is_muted: false,
+            muted_until: null,
+            ban_reason: null
+        }).eq('id', userId)
+        addLog(`Desbaniu ${userName}`)
+        setShowBanModal(false)
+        fetchData()
+    }
+
+    // Remover pontos como punição
+    const penalizePoints = async (userId: string, userName: string, points: number) => {
+        const user = users.find(u => u.id === userId)
+        if (!user) return
+        const newPoints = Math.max(0, user.points - points)
+        await supabase.from('users').update({ points: newPoints }).eq('id', userId)
+        addLog(`Removeu ${points} pontos de ${userName}`)
+        setShowBanModal(false)
         fetchData()
     }
 
@@ -586,27 +679,50 @@ export default function AdminPanel() {
                                             <tr>
                                                 <th>Nome</th>
                                                 <th>Email</th>
+                                                <th>Status</th>
                                                 <th>Pontos</th>
                                                 <th>Streak</th>
-                                                <th>Meta (kg)</th>
                                                 <th>Ações</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredUsers.map(user => (
-                                                <tr key={user.id}>
-                                                    <td>{user.name}</td>
-                                                    <td className="email-cell">{user.email}</td>
-                                                    <td><span className="badge points">{user.points}</span></td>
-                                                    <td><span className="badge streak">🔥 {user.streak_days}</span></td>
-                                                    <td>{user.weight_goal || '-'}</td>
-                                                    <td className="actions-cell">
-                                                        <button className="btn-icon edit" onClick={() => openUserModal(user)} title="Editar">✏️</button>
-                                                        <button className="btn-icon warn" onClick={() => banUser(user.id, user.name)} title="Banir">🚫</button>
-                                                        <button className="btn-icon delete" onClick={() => deleteUser(user.id, user.name)} title="Excluir" disabled={user.email === ADMIN_EMAIL}>🗑️</button>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {filteredUsers.map(user => {
+                                                const isBanned = (user as any).is_banned ||
+                                                    ((user as any).banned_until && new Date((user as any).banned_until) > new Date())
+                                                const isFeedBanned = (user as any).feed_banned_until &&
+                                                    new Date((user as any).feed_banned_until) > new Date()
+                                                const isMuted = (user as any).is_muted ||
+                                                    ((user as any).muted_until && new Date((user as any).muted_until) > new Date())
+
+                                                return (
+                                                    <tr key={user.id} className={isBanned ? 'row-banned' : ''}>
+                                                        <td>
+                                                            {user.name}
+                                                            {isBanned && <span className="status-badge banned">🚫</span>}
+                                                            {isMuted && !isBanned && <span className="status-badge muted">🔇</span>}
+                                                        </td>
+                                                        <td className="email-cell">{user.email}</td>
+                                                        <td>
+                                                            {isBanned ? (
+                                                                <span className="badge status-banned">Banido</span>
+                                                            ) : isFeedBanned ? (
+                                                                <span className="badge status-feed-banned">Feed 🚫</span>
+                                                            ) : isMuted ? (
+                                                                <span className="badge status-muted">Mudo</span>
+                                                            ) : (
+                                                                <span className="badge status-active">Ativo</span>
+                                                            )}
+                                                        </td>
+                                                        <td><span className="badge points">{user.points}</span></td>
+                                                        <td><span className="badge streak">🔥 {user.streak_days}</span></td>
+                                                        <td className="actions-cell">
+                                                            <button className="btn-icon edit" onClick={() => openUserModal(user)} title="Editar">✏️</button>
+                                                            <button className="btn-icon warn" onClick={() => openBanModal(user)} title="Gerenciar Ban">⚖️</button>
+                                                            <button className="btn-icon delete" onClick={() => deleteUser(user.id, user.name)} title="Excluir" disabled={user.email === ADMIN_EMAIL}>🗑️</button>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -1033,6 +1149,68 @@ export default function AdminPanel() {
                                 <button className="btn-primary btn-save" onClick={saveUser}>💾 Salvar</button>
                             </>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Ban Modal */}
+            {showBanModal && banningUser && (
+                <div className="modal-backdrop" onClick={() => setShowBanModal(false)}>
+                    <div className="modal-content ban-modal" onClick={e => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setShowBanModal(false)}>×</button>
+
+                        <h3>⚖️ Gerenciar Usuário</h3>
+                        <div className="ban-user-info">
+                            <span className="ban-user-name">{banningUser.name}</span>
+                            <span className="ban-user-email">{banningUser.email}</span>
+                        </div>
+
+                        <div className="ban-options">
+                            <h4>🔇 Silenciar</h4>
+                            <button className="ban-btn mute" onClick={() => muteUser(banningUser.id, banningUser.name)}>
+                                🔇 Mutar por 3 dias
+                                <span className="ban-description">Não pode postar ou comentar</span>
+                            </button>
+
+                            <h4>🚫 Banir do Feed</h4>
+                            <button className="ban-btn feed-ban" onClick={() => banFromFeed(banningUser.id, banningUser.name)}>
+                                📰 Banido do Feed por 3 dias
+                                <span className="ban-description">Não pode ver ou postar no feed</span>
+                            </button>
+
+                            <h4>⛔ Banir do App</h4>
+                            <button className="ban-btn warning" onClick={() => banFromApp24h(banningUser.id, banningUser.name)}>
+                                ⏰ Ban por 24 horas
+                                <span className="ban-description">Suspensão temporária do app</span>
+                            </button>
+                            <button className="ban-btn danger" onClick={() => banFromApp7d(banningUser.id, banningUser.name)}>
+                                📅 Ban por 7 dias
+                                <span className="ban-description">Suspensão de uma semana</span>
+                            </button>
+                            <button className="ban-btn permanent" onClick={() => banPermanently(banningUser.id, banningUser.name)}>
+                                ⛔ Ban PERMANENTE
+                                <span className="ban-description">Acesso bloqueado indefinidamente</span>
+                            </button>
+
+                            <h4>💰 Penalidades</h4>
+                            <div className="penalty-buttons">
+                                <button className="ban-btn penalty" onClick={() => penalizePoints(banningUser.id, banningUser.name, 50)}>
+                                    -50 pts
+                                </button>
+                                <button className="ban-btn penalty" onClick={() => penalizePoints(banningUser.id, banningUser.name, 100)}>
+                                    -100 pts
+                                </button>
+                                <button className="ban-btn penalty" onClick={() => penalizePoints(banningUser.id, banningUser.name, 500)}>
+                                    -500 pts
+                                </button>
+                            </div>
+
+                            <h4>✅ Restaurar</h4>
+                            <button className="ban-btn success" onClick={() => unbanUser(banningUser.id, banningUser.name)}>
+                                ✅ Remover todos os bans
+                                <span className="ban-description">Restaurar acesso completo</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

@@ -1112,3 +1112,227 @@
         align-items: flex-start;
     }
 }
+
+/* ================================================
+   BAN SYSTEM STYLES
+   ================================================ */
+
+/* Status Badges */
+.badge.status-active {
+    background: rgba(0, 200, 83, 0.2);
+    color: #00C853;
+}
+
+.badge.status-banned {
+    background: rgba(255, 64, 129, 0.3);
+    color: #FF4081;
+}
+
+.badge.status-feed-banned {
+    background: rgba(255, 152, 0, 0.3);
+    color: #FF9800;
+}
+
+.badge.status-muted {
+    background: rgba(156, 39, 176, 0.3);
+    color: #AB47BC;
+}
+
+.status-badge {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 0.8rem;
+}
+
+.status-badge.banned {
+    color: #FF4081;
+}
+
+.status-badge.muted {
+    color: #AB47BC;
+}
+
+/* Banned Row */
+.row-banned {
+    background: rgba(255, 64, 129, 0.08) !important;
+}
+
+.row-banned:hover {
+    background: rgba(255, 64, 129, 0.12) !important;
+}
+
+/* Ban Modal */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: var(--spacing-md);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    width: 100%;
+    max-width: 450px;
+    max-height: 90vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalIn 0.3s ease;
+}
+
+.ban-modal h3 {
+    text-align: center;
+    margin-bottom: var(--spacing-md);
+    font-size: 1.3rem;
+}
+
+.ban-user-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+}
+
+.ban-user-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ban-user-email {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.ban-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.ban-options h4 {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: var(--spacing-md);
+    margin-bottom: var(--spacing-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ban-options h4:first-child {
+    margin-top: 0;
+}
+
+.ban-btn {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-normal);
+    text-align: left;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.ban-btn:hover {
+    transform: translateY(-2px);
+}
+
+.ban-description {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 4px;
+}
+
+/* Ban button types */
+.ban-btn.mute {
+    border-color: #9C27B0;
+}
+
+.ban-btn.mute:hover {
+    background: rgba(156, 39, 176, 0.15);
+    border-color: #AB47BC;
+}
+
+.ban-btn.feed-ban {
+    border-color: #FF9800;
+}
+
+.ban-btn.feed-ban:hover {
+    background: rgba(255, 152, 0, 0.15);
+    border-color: #FFB74D;
+}
+
+.ban-btn.warning {
+    border-color: #FFC107;
+}
+
+.ban-btn.warning:hover {
+    background: rgba(255, 193, 7, 0.15);
+    border-color: #FFCA28;
+}
+
+.ban-btn.danger {
+    border-color: #FF5722;
+}
+
+.ban-btn.danger:hover {
+    background: rgba(255, 87, 34, 0.15);
+    border-color: #FF7043;
+}
+
+.ban-btn.permanent {
+    border-color: #F44336;
+    background: rgba(244, 67, 54, 0.08);
+}
+
+.ban-btn.permanent:hover {
+    background: rgba(244, 67, 54, 0.2);
+    border-color: #EF5350;
+}
+
+.ban-btn.success {
+    border-color: #00C853;
+}
+
+.ban-btn.success:hover {
+    background: rgba(0, 200, 83, 0.15);
+    border-color: #00E676;
+}
+
+.ban-btn.penalty {
+    border-color: #FF4081;
+    padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.ban-btn.penalty:hover {
+    background: rgba(255, 64, 129, 0.15);
+}
+
+.penalty-buttons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.penalty-buttons .ban-btn {
+    flex: 1;
+    text-align: center;
+    font-weight: 600;
+}
