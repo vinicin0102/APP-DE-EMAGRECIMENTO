@@ -53,48 +53,41 @@ function App() {
             <div className="welcome-logo-container">
               <div className="welcome-logo-glow"></div>
               <div className="welcome-logo">
-                <span className="logo-icon">💎</span>
+                <img src="/logo-clube-musas.png" alt="Clube das Musas" className="logo-image" />
               </div>
             </div>
 
             <h1 className="welcome-title">
-              Slim<span className="gradient-text">Fit</span>
+              Clube das <span className="gradient-text">Musas</span>
             </h1>
-            <p className="welcome-subtitle">Sua Jornada de Transformação Começa Aqui</p>
+            <p className="welcome-subtitle">Onde Mães Viram Musas</p>
 
             <div className="welcome-features">
               <div className="welcome-feature">
-                <div className="feature-icon">🎯</div>
+                <div className="feature-icon">🌸</div>
                 <div className="feature-content">
-                  <span className="feature-title">Desafios Motivadores</span>
-                  <span className="feature-desc">Alcance suas metas</span>
+                  <span className="feature-title">Desafios</span>
+                  <span className="feature-desc">Evolua em tempo recorde</span>
                 </div>
               </div>
               <div className="welcome-feature">
-                <div className="feature-icon">👥</div>
+                <div className="feature-icon">🤍</div>
                 <div className="feature-content">
-                  <span className="feature-title">Comunidade Ativa</span>
-                  <span className="feature-desc">Apoio e motivação</span>
+                  <span className="feature-title">Comunidade de Musas</span>
+                  <span className="feature-desc">Apoio, acolhimento e motivação</span>
                 </div>
               </div>
               <div className="welcome-feature">
-                <div className="feature-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="24" height="24">
-                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                    <polyline points="14,2 14,8 20,8" />
-                    <line x1="16" y1="13" x2="8" y2="13" />
-                    <line x1="16" y1="17" x2="8" y2="17" />
-                  </svg>
-                </div>
+                <div className="feature-icon">💪</div>
                 <div className="feature-content">
-                  <span className="feature-title">Planos Personalizados</span>
-                  <span className="feature-desc">Treino e dieta sob medida</span>
+                  <span className="feature-title">Planos Seguros & Personalizados</span>
+                  <span className="feature-desc">Treinos e dietas pensadas para mães</span>
                 </div>
               </div>
               <div className="welcome-feature">
-                <div className="feature-icon">📚</div>
+                <div className="feature-icon">🎥</div>
                 <div className="feature-content">
-                  <span className="feature-title">Aulas Exclusivas</span>
+                  <span className="feature-title">Aulas & Guia de Recuperação</span>
                   <span className="feature-desc">Conteúdo premium</span>
                 </div>
               </div>
@@ -119,8 +112,8 @@ function App() {
                 <span>4.9/5</span>
               </div>
               <div className="trust-item">
-                <span>👥</span>
-                <span>10K+ membros</span>
+                <span>👩‍👧</span>
+                <span>10K+ Musas</span>
               </div>
               <div className="trust-item">
                 <span>🔒</span>

@@ -10,16 +10,16 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'apple-touch-icon-180x180.png', 'maskable-icon-512x512.png'],
       manifest: {
-        name: 'SlimFit - Comunidade de Emagrecimento',
-        short_name: 'SlimFit',
-        description: 'Transforme seu corpo com o poder da comunidade. Desafios, apoio mútuo e acompanhamento personalizado.',
-        theme_color: '#0A0F1A',
-        background_color: '#0A0F1A',
+        name: 'Clube das Musas - Onde Mães Viram Musas',
+        short_name: 'Clube das Musas',
+        description: 'Comunidade exclusiva para mães que querem se transformar. Desafios, apoio, acolhimento e planos personalizados.',
+        theme_color: '#0A0810',
+        background_color: '#0A0810',
         display: 'standalone',
         orientation: 'portrait',
         scope: '/',
         start_url: '/',
-        categories: ['health', 'fitness', 'lifestyle'],
+        categories: ['health', 'fitness', 'lifestyle', 'women'],
         lang: 'pt-BR',
         dir: 'ltr',
         icons: [
@@ -96,7 +96,7 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             form_factor: 'narrow',
-            label: 'SlimFit App'
+            label: 'Clube das Musas App'
           }
         ]
       },
