@@ -61,28 +61,11 @@ export function PWAInstallPrompt() {
                     </button>
 
                     <div className="pwa-modal-icon">
-                        <svg viewBox="0 0 512 512" className="app-icon">
-                            <defs>
-                                <linearGradient id="modalBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                    <stop offset="0%" style={{ stopColor: '#0D1520' }} />
-                                    <stop offset="100%" style={{ stopColor: '#0A0F1A' }} />
-                                </linearGradient>
-                                <linearGradient id="modalFlameGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-                                    <stop offset="0%" style={{ stopColor: '#00C853' }} />
-                                    <stop offset="50%" style={{ stopColor: '#00E676' }} />
-                                    <stop offset="100%" style={{ stopColor: '#69F0AE' }} />
-                                </linearGradient>
-                            </defs>
-                            <rect width="512" height="512" rx="100" fill="url(#modalBgGrad)" />
-                            <g transform="translate(256, 256)">
-                                <path d="M0,-120 C55,-75 75,-30 65,30 C60,65 32,95 0,120 C-32,95 -60,65 -65,30 C-75,-30 -55,-75 0,-120 Z"
-                                    fill="url(#modalFlameGrad)" opacity="0.9" />
-                            </g>
-                        </svg>
+                        <img src="/icon-512x512.png" alt="Clube das Musas" className="app-icon" />
                     </div>
 
-                    <h2>Instalar SlimFit</h2>
-                    <p>Instale o SlimFit na tela inicial do seu iPhone para acesso rápido!</p>
+                    <h2>Instalar Clube das Musas</h2>
+                    <p>Instale o app na tela inicial do seu iPhone para acesso rápido!</p>
 
                     <div className="ios-steps">
                         <div className="ios-step">
@@ -135,28 +118,11 @@ export function PWAInstallPrompt() {
         <div className="pwa-install-banner">
             <div className="pwa-banner-content">
                 <div className="pwa-banner-icon">
-                    <svg viewBox="0 0 192 192" className="app-icon-small">
-                        <defs>
-                            <linearGradient id="bannerBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style={{ stopColor: '#0D1520' }} />
-                                <stop offset="100%" style={{ stopColor: '#0A0F1A' }} />
-                            </linearGradient>
-                            <linearGradient id="bannerFlameGrad" x1="0%" y1="100%" x2="100%" y2="0%">
-                                <stop offset="0%" style={{ stopColor: '#00C853' }} />
-                                <stop offset="50%" style={{ stopColor: '#00E676' }} />
-                                <stop offset="100%" style={{ stopColor: '#69F0AE' }} />
-                            </linearGradient>
-                        </defs>
-                        <rect width="192" height="192" rx="40" fill="url(#bannerBgGrad)" />
-                        <g transform="translate(96, 96)">
-                            <path d="M0,-52 C24,-33 33,-14 28,14 C26,28 14,42 0,52 C-14,42 -26,28 -28,14 C-33,-14 -24,-33 0,-52 Z"
-                                fill="url(#bannerFlameGrad)" opacity="0.9" />
-                        </g>
-                    </svg>
+                    <img src="/icon-512x512.png" alt="Clube das Musas" className="app-icon-small" />
                 </div>
 
                 <div className="pwa-banner-text">
-                    <strong>Instalar SlimFit</strong>
+                    <strong>Instalar Clube das Musas</strong>
                     <span>Acesse rapidamente direto da sua tela inicial</span>
                 </div>
 
