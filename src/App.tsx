@@ -50,14 +50,6 @@ function App() {
           </div>
 
           <div className="welcome-content">
-            {/* Logo Premium */}
-            <div className="welcome-logo-container">
-              <div className="welcome-logo-glow"></div>
-              <div className="welcome-logo">
-                <img src="/logo-clube-musas.png" alt="Clube das Musas" className="logo-image" />
-              </div>
-            </div>
-
             <h1 className="welcome-title">
               Clube das <span className="gradient-text">Musas</span>
             </h1>
