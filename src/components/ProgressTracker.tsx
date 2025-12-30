@@ -1,7 +1,50 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useDailyLogs } from '../hooks/useDailyLogs'
 import { useWeightLogs } from '../hooks/useWeightLogs'
+import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts'
 import './ProgressTracker.css'
+
+// Componente de Ring/Círculo de Progresso
+const ProgressRing = ({ percent, label, color }: { percent: number, label: string, color: string }) => {
+    const radius = 40
+    const stroke = 8
+    const normalizedRadius = radius - stroke / 2
+    const circumference = normalizedRadius * 2 * Math.PI
+    const strokeDashoffset = circumference - (percent / 100) * circumference
+
+    return (
+        <div className="progress-ring-container">
+            <svg height={radius * 2} width={radius * 2} className="progress-ring-svg">
+                {/* Background circle */}
+                <circle
+                    stroke="rgba(255, 255, 255, 0.1)"
+                    fill="transparent"
+                    strokeWidth={stroke}
+                    r={normalizedRadius}
+                    cx={radius}
+                    cy={radius}
+                />
+                {/* Progress circle */}
+                <circle
+                    stroke={color}
+                    fill="transparent"
+                    strokeWidth={stroke}
+                    strokeDasharray={circumference + ' ' + circumference}
+                    style={{ strokeDashoffset, transition: 'stroke-dashoffset 1s ease-out' }}
+                    strokeLinecap="round"
+                    r={normalizedRadius}
+                    cx={radius}
+                    cy={radius}
+                    transform={`rotate(-90 ${radius} ${radius})`}
+                />
+            </svg>
+            <div className="progress-ring-content">
+                <span className="progress-ring-percent">{percent}%</span>
+            </div>
+            <span className="progress-ring-label">{label}</span>
+        </div>
+    )
+}
 
 export default function ProgressTracker() {
     const {
@@ -32,6 +75,33 @@ export default function ProgressTracker() {
     }, [logsLoading, weightLoading])
 
     const loading = (logsLoading || weightLoading) && !forceLoaded
+
+    // Calcular dados dos gráficos
+    const chartData = useMemo(() => {
+        const calendarData = getCalendarData(14)
+        return calendarData.map((day, index) => ({
+            name: new Date(day.date).getDate().toString(),
+            value: Math.round((day.completed / 3) * 100),
+            day: index + 1
+        })).reverse()
+    }, [getCalendarData])
+
+    // Calcular progresso do dia
+    const todayProgress = useMemo(() => {
+        let count = 0
+        if (todayLog?.ate_healthy) count++
+        if (todayLog?.trained) count++
+        if (todayLog?.drank_water) count++
+        return Math.round((count / 3) * 100)
+    }, [todayLog])
+
+    // Calcular ritmo (média dos últimos 7 dias)
+    const rhythmProgress = useMemo(() => {
+        const calendarData = getCalendarData(7)
+        const total = calendarData.reduce((acc, day) => acc + day.completed, 0)
+        const maxPossible = 7 * 3 // 7 dias x 3 checks
+        return Math.round((total / maxPossible) * 100)
+    }, [getCalendarData])
 
     const handleToggle = async (field: 'ate_healthy' | 'trained' | 'drank_water') => {
         await toggleCheck(field)
@@ -103,6 +173,80 @@ export default function ProgressTracker() {
             {/* Today's Check-ins */}
             {activeView === 'today' && (
                 <div className="today-section">
+                    {/* Progress Rings Dashboard */}
+                    <div className="progress-rings-dashboard">
+                        <h2 className="dashboard-title">Visão Geral</h2>
+                        <div className="progress-rings-grid">
+                            <ProgressRing
+                                percent={rhythmProgress}
+                                label="RITMO"
+                                color="#00C9A7"
+                            />
+                            <ProgressRing
+                                percent={todayProgress}
+                                label="PROGRESSO DIÁRIO"
+                                color="#00A3FF"
+                            />
+                            <ProgressRing
+                                percent={consistencyStats.week?.consistency_percentage || 0}
+                                label="PROGRESSO SEMANAL"
+                                color="#00C9A7"
+                            />
+                            <ProgressRing
+                                percent={consistencyStats.month?.consistency_percentage || 0}
+                                label="PROGRESSO MENSAL"
+                                color="#00C9A7"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Area Chart */}
+                    <div className="progress-chart-card">
+                        <h3 className="chart-title">PROGRESSO DIÁRIO</h3>
+                        <div className="chart-container">
+                            <ResponsiveContainer width="100%" height={180}>
+                                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                    <defs>
+                                        <linearGradient id="progressGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="#00C9A7" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="#00C9A7" stopOpacity={0.05} />
+                                        </linearGradient>
+                                    </defs>
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10 }}
+                                        domain={[0, 100]}
+                                    />
+                                    <Tooltip
+                                        contentStyle={{
+                                            backgroundColor: 'rgba(20, 20, 30, 0.95)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            borderRadius: '12px',
+                                            color: '#fff'
+                                        }}
+                                        formatter={(value) => [`${value ?? 0}%`, 'Progresso']}
+                                        labelFormatter={(label) => `Dia ${label}`}
+                                    />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="value"
+                                        stroke="#00C9A7"
+                                        strokeWidth={2}
+                                        fill="url(#progressGradient)"
+                                        animationDuration={1500}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </div>
+
                     <div className="checklist-card">
                         <h2>Check-in de Hoje</h2>
                         <p className="checklist-subtitle">Marque o que você completou</p>
@@ -155,26 +299,6 @@ export default function ProgressTracker() {
                                     <div className="toggle-circle"></div>
                                 </div>
                             </button>
-                        </div>
-                    </div>
-
-                    {/* Consistency Stats */}
-                    <div className="stats-grid">
-                        <div className="stat-card">
-                            <div className="stat-icon">📅</div>
-                            <div className="stat-value">{consistencyStats.week?.consistency_percentage || 0}%</div>
-                            <div className="stat-label">Consistência Semanal</div>
-                            <div className="stat-detail">
-                                {consistencyStats.week?.days_with_all_checks || 0} de 7 dias completos
-                            </div>
-                        </div>
-                        <div className="stat-card">
-                            <div className="stat-icon">🗓️</div>
-                            <div className="stat-value">{consistencyStats.month?.consistency_percentage || 0}%</div>
-                            <div className="stat-label">Consistência Mensal</div>
-                            <div className="stat-detail">
-                                {consistencyStats.month?.days_with_all_checks || 0} de 30 dias completos
-                            </div>
                         </div>
                     </div>
 

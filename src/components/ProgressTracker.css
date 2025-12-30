@@ -247,6 +247,114 @@
     margin-top: var(--spacing-xs);
 }
 
+/* ================================================
+   PROGRESS RINGS DASHBOARD
+   ================================================ */
+
+.progress-rings-dashboard {
+    background: linear-gradient(135deg, rgba(0, 201, 167, 0.08) 0%, rgba(0, 163, 255, 0.05) 100%);
+    border: 1px solid rgba(0, 201, 167, 0.2);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+}
+
+.dashboard-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.progress-rings-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+}
+
+.progress-ring-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-xs);
+    position: relative;
+}
+
+.progress-ring-svg {
+    transform: rotate(-90deg);
+    filter: drop-shadow(0 0 8px rgba(0, 201, 167, 0.3));
+}
+
+.progress-ring-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    margin-top: -10px;
+}
+
+.progress-ring-percent {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.progress-ring-label {
+    font-size: 0.55rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+    max-width: 70px;
+    line-height: 1.2;
+}
+
+/* ================================================
+   PROGRESS AREA CHART
+   ================================================ */
+
+.progress-chart-card {
+    background: linear-gradient(180deg, rgba(0, 20, 40, 0.9) 0%, rgba(0, 10, 20, 0.95) 100%);
+    border: 1px solid rgba(0, 201, 167, 0.15);
+    border-radius: var(--radius-xl);
+    padding: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+    overflow: hidden;
+}
+
+.chart-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: var(--spacing-md);
+    text-align: center;
+}
+
+.chart-container {
+    width: 100%;
+    height: 180px;
+}
+
+/* Recharts customization */
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+    stroke: rgba(255, 255, 255, 0.05);
+}
+
+.recharts-tooltip-wrapper {
+    outline: none;
+}
+
+.recharts-area-area {
+    filter: drop-shadow(0 0 10px rgba(0, 201, 167, 0.3));
+}
+
 /* Quick Weight Card */
 .quick-weight-card {
     display: flex;
@@ -747,6 +855,29 @@
         grid-template-columns: 1fr;
     }
 
+    /* Progress Rings Mobile */
+    .progress-rings-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-md);
+    }
+
+    .progress-ring-container {
+        padding: var(--spacing-sm);
+    }
+
+    .progress-ring-label {
+        font-size: 0.5rem;
+        max-width: 60px;
+    }
+
+    .progress-ring-percent {
+        font-size: 0.8rem;
+    }
+
+    .chart-container {
+        height: 150px;
+    }
+
     .quick-weight-card {
         flex-direction: column;
         gap: var(--spacing-md);
@@ -769,5 +900,21 @@
 
     .day-number {
         font-size: 0.7rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .progress-rings-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-xs);
+    }
+
+    .progress-ring-svg {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    .progress-ring-label {
+        font-size: 0.45rem;
     }
 }
