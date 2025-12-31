@@ -22,7 +22,8 @@ function App() {
   const [showAuth, setShowAuth] = useState(false)
   const { user, profile, loading } = useAuth()
 
-  const isAdmin = profile?.email === ADMIN_EMAIL
+  // Verifica admin usando o email do auth (mais confiável) ou do profile
+  const isAdmin = user?.email === ADMIN_EMAIL || profile?.email === ADMIN_EMAIL
 
   if (loading) {
     return (
