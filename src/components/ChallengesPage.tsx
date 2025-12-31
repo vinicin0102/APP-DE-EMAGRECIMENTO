@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useChallenges } from '../hooks/useChallenges'
 import './ChallengesPage.css'
@@ -114,10 +114,11 @@ const freeChallenges: PremiumChallenge[] = [
 
 export default function ChallengesPage() {
     const { user, profile } = useAuth()
-    const { challenges, loading, joinChallenge, isParticipating, getProgress, updateProgress } = useChallenges()
+    const { challenges, loading: challengesLoading, joinChallenge, isParticipating, getProgress, updateProgress } = useChallenges()
     const [activeFilter, setActiveFilter] = useState<'premium' | 'free' | 'active'>('premium')
     const [selectedChallenge, setSelectedChallenge] = useState<PremiumChallenge | null>(null)
     const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+    const [forceLoaded, setForceLoaded] = useState(false)
     const [purchasedChallenges, setPurchasedChallenges] = useState<string[]>(() => {
         const saved = localStorage.getItem('purchased_challenges')
         return saved ? JSON.parse(saved) : []
@@ -130,6 +131,19 @@ export default function ChallengesPage() {
         const saved = localStorage.getItem('user_badges')
         return saved ? JSON.parse(saved) : []
     })
+
+    // Timeout de segurança - força carregamento após 3 segundos
+    useEffect(() => {
+        const timeout = setTimeout(() => {
+            if (challengesLoading) {
+                console.warn('ChallengesPage: Timeout de loading atingido, forçando carregamento')
+                setForceLoaded(true)
+            }
+        }, 3000)
+        return () => clearTimeout(timeout)
+    }, [challengesLoading])
+
+    const loading = challengesLoading && !forceLoaded
 
     const allChallenges = [...premiumChallenges, ...freeChallenges]
 

@@ -48,7 +48,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <button className="modal-close" onClick={onClose}>×</button>
 
                 <div className="modal-header">
-                    <div className="modal-logo">💪</div>
+                    <div className="modal-logo">
+                        <img src="/logo-clube-musas.png" alt="Clube das Musas" />
+                    </div>
                     <h2>{mode === 'login' ? 'Bem-vindo de volta!' : 'Criar conta'}</h2>
                     <p>{mode === 'login'
                         ? 'Entre para continuar sua jornada'

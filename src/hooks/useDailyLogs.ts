@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 
 export interface DailyLog {
@@ -28,76 +28,11 @@ export function useDailyLogs() {
         week: ConsistencyStats | null
         month: ConsistencyStats | null
     }>({ week: null, month: null })
+    const isMounted = useRef(true)
 
     const today = new Date().toISOString().split('T')[0]
 
-    const fetchLogs = useCallback(async () => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) {
-                setLoading(false)
-                return
-            }
-
-            // Buscar log de hoje
-            const { data: todayData, error: todayError } = await supabase
-                .from('daily_logs')
-                .select('*')
-                .eq('user_id', user.id)
-                .eq('log_date', today)
-                .single()
-
-            if (todayError && todayError.code !== 'PGRST116') {
-                // PGRST116 = No rows returned (normal quando não tem log)
-                console.warn('Erro ao buscar log de hoje:', todayError.message)
-            }
-            setTodayLog(todayData || null)
-
-            // Buscar logs da semana (últimos 7 dias)
-            const weekStart = new Date()
-            weekStart.setDate(weekStart.getDate() - 6)
-            const { data: weekData, error: weekError } = await supabase
-                .from('daily_logs')
-                .select('*')
-                .eq('user_id', user.id)
-                .gte('log_date', weekStart.toISOString().split('T')[0])
-                .order('log_date', { ascending: false })
-
-            if (weekError) {
-                console.warn('Tabela daily_logs não encontrada:', weekError.message)
-                setWeekLogs([])
-                setMonthLogs([])
-                setLoading(false)
-                return
-            }
-            setWeekLogs(weekData || [])
-
-            // Buscar logs do mês (últimos 30 dias)
-            const monthStart = new Date()
-            monthStart.setDate(monthStart.getDate() - 29)
-            const { data: monthData } = await supabase
-                .from('daily_logs')
-                .select('*')
-                .eq('user_id', user.id)
-                .gte('log_date', monthStart.toISOString().split('T')[0])
-                .order('log_date', { ascending: false })
-
-            setMonthLogs(monthData || [])
-
-            // Calcular estatísticas de consistência
-            calculateConsistency(weekData || [], monthData || [])
-
-        } catch (error) {
-            console.error('Erro ao buscar logs diários:', error)
-            setTodayLog(null)
-            setWeekLogs([])
-            setMonthLogs([])
-        } finally {
-            setLoading(false)
-        }
-    }, [today])
-
-    const calculateConsistency = (weekData: DailyLog[], monthData: DailyLog[]) => {
+    const calculateConsistency = useCallback((weekData: DailyLog[], monthData: DailyLog[]) => {
         // Consistência da semana
         const weekComplete = weekData.filter(log =>
             log.ate_healthy && log.trained && log.drank_water
@@ -120,10 +55,103 @@ export function useDailyLogs() {
                 consistency_percentage: Math.round((monthComplete / 30) * 100)
             }
         })
-    }
+    }, [])
+
+    const fetchLogs = useCallback(async () => {
+        if (!isMounted.current) return
+
+        try {
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) {
+                if (isMounted.current) setLoading(false)
+                return
+            }
+
+            const todayDate = new Date().toISOString().split('T')[0]
+
+            // Buscar log de hoje
+            const { data: todayData, error: todayError } = await supabase
+                .from('daily_logs')
+                .select('*')
+                .eq('user_id', user.id)
+                .eq('log_date', todayDate)
+                .single()
+
+            if (!isMounted.current) return
+
+            if (todayError && todayError.code !== 'PGRST116') {
+                // PGRST116 = No rows returned (normal quando não tem log)
+                console.warn('Erro ao buscar log de hoje:', todayError.message)
+            }
+            setTodayLog(todayData || null)
+
+            // Buscar logs da semana (últimos 7 dias)
+            const weekStart = new Date()
+            weekStart.setDate(weekStart.getDate() - 6)
+            const { data: weekData, error: weekError } = await supabase
+                .from('daily_logs')
+                .select('*')
+                .eq('user_id', user.id)
+                .gte('log_date', weekStart.toISOString().split('T')[0])
+                .order('log_date', { ascending: false })
+
+            if (!isMounted.current) return
+
+            if (weekError) {
+                console.warn('Tabela daily_logs não encontrada:', weekError.message)
+                setWeekLogs([])
+                setMonthLogs([])
+                setLoading(false)
+                return
+            }
+            setWeekLogs(weekData || [])
+
+            // Buscar logs do mês (últimos 30 dias)
+            const monthStart = new Date()
+            monthStart.setDate(monthStart.getDate() - 29)
+            const { data: monthData } = await supabase
+                .from('daily_logs')
+                .select('*')
+                .eq('user_id', user.id)
+                .gte('log_date', monthStart.toISOString().split('T')[0])
+                .order('log_date', { ascending: false })
+
+            if (!isMounted.current) return
+
+            setMonthLogs(monthData || [])
+
+            // Calcular estatísticas de consistência
+            calculateConsistency(weekData || [], monthData || [])
+
+        } catch (error) {
+            console.error('Erro ao buscar logs diários:', error)
+            if (isMounted.current) {
+                setTodayLog(null)
+                setWeekLogs([])
+                setMonthLogs([])
+            }
+        } finally {
+            if (isMounted.current) {
+                setLoading(false)
+            }
+        }
+    }, [calculateConsistency])
 
     useEffect(() => {
+        isMounted.current = true
         fetchLogs()
+
+        // Timeout de segurança - força loading false após 6 segundos
+        const safetyTimeout = setTimeout(() => {
+            if (isMounted.current) {
+                setLoading(false)
+            }
+        }, 6000)
+
+        return () => {
+            isMounted.current = false
+            clearTimeout(safetyTimeout)
+        }
     }, [fetchLogs])
 
     const updateTodayLog = async (updates: Partial<Pick<DailyLog, 'ate_healthy' | 'trained' | 'drank_water' | 'notes'>>) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Challenge, ChallengeParticipant } from '../lib/supabase'
 
@@ -7,55 +7,87 @@ export function useChallenges() {
     const [userChallenges, setUserChallenges] = useState<ChallengeParticipant[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<Error | null>(null)
+    const isMounted = useRef(true)
 
     const fetchChallenges = async () => {
+        if (!isMounted.current) return
+
         try {
             setLoading(true)
-            const { data, error } = await supabase
+            const { data, error: queryError } = await supabase
                 .from('challenges')
                 .select('*')
                 .gte('end_date', new Date().toISOString())
                 .order('participants_count', { ascending: false })
 
-            if (error) {
-                console.warn('Tabela challenges não encontrada ou erro:', error.message)
+            if (!isMounted.current) return
+
+            if (queryError) {
+                console.warn('Tabela challenges não encontrada ou erro:', queryError.message)
                 setChallenges([])
             } else {
                 setChallenges(data || [])
             }
         } catch (err) {
             console.error('Erro ao buscar desafios:', err)
-            setChallenges([])
+            if (isMounted.current) {
+                setChallenges([])
+            }
         } finally {
-            setLoading(false)
+            if (isMounted.current) {
+                setLoading(false)
+            }
         }
     }
 
     const fetchUserChallenges = async () => {
+        if (!isMounted.current) return
+
         try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
 
-            const { data, error } = await supabase
+            const { data, error: queryError } = await supabase
                 .from('challenge_participants')
                 .select('*')
                 .eq('user_id', user.id)
 
-            if (error) {
-                console.warn('Tabela challenge_participants não encontrada ou erro:', error.message)
+            if (!isMounted.current) return
+
+            if (queryError) {
+                console.warn('Tabela challenge_participants não encontrada ou erro:', queryError.message)
                 setUserChallenges([])
             } else {
                 setUserChallenges(data || [])
             }
         } catch (err) {
             console.error('Erro ao buscar participações:', err)
-            setUserChallenges([])
+            if (isMounted.current) {
+                setUserChallenges([])
+            }
         }
     }
 
     useEffect(() => {
-        fetchChallenges()
-        fetchUserChallenges()
+        isMounted.current = true
+
+        const loadData = async () => {
+            await fetchChallenges()
+            await fetchUserChallenges()
+        }
+        loadData()
+
+        // Timeout de segurança - força loading false após 6 segundos
+        const safetyTimeout = setTimeout(() => {
+            if (isMounted.current) {
+                setLoading(false)
+            }
+        }, 6000)
+
+        return () => {
+            isMounted.current = false
+            clearTimeout(safetyTimeout)
+        }
     }, [])
 
     const joinChallenge = async (challengeId: string) => {

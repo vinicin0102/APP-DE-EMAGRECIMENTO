@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, useRef, type ReactNode } from 'react'
 import type { User as SupabaseUser, Session } from '@supabase/supabase-js'
 import { supabase } from '../lib/supabase'
 import type { User } from '../lib/supabase'
@@ -21,41 +21,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [profile, setProfile] = useState<User | null>(null)
     const [session, setSession] = useState<Session | null>(null)
     const [loading, setLoading] = useState(true)
+    const loadingCompleted = useRef(false)
 
     useEffect(() => {
         let mounted = true
+        loadingCompleted.current = false
 
         // Timeout de segurança - 3 segundos máximo
         const timeout = setTimeout(() => {
-            if (mounted && loading) {
+            if (mounted && !loadingCompleted.current) {
                 console.log('Auth timeout - forcing load complete')
+                loadingCompleted.current = true
                 setLoading(false)
             }
         }, 3000)
+
+        const completeLoading = () => {
+            if (!loadingCompleted.current) {
+                loadingCompleted.current = true
+                setLoading(false)
+            }
+        }
 
         const initAuth = async () => {
             try {
                 const { data: { session }, error } = await supabase.auth.getSession()
 
+                if (!mounted) return
+
                 if (error) {
                     console.error('Error getting session:', error)
-                    if (mounted) setLoading(false)
+                    completeLoading()
                     return
                 }
 
-                if (mounted) {
-                    setSession(session)
-                    setUser(session?.user ?? null)
-                }
+                setSession(session)
+                setUser(session?.user ?? null)
 
-                if (session?.user && mounted) {
+                if (session?.user) {
                     await fetchProfile(session.user.id)
-                } else if (mounted) {
-                    setLoading(false)
+                } else {
+                    completeLoading()
                 }
             } catch (error) {
                 console.error('Auth init error:', error)
-                if (mounted) setLoading(false)
+                if (mounted) completeLoading()
             }
         }
 
@@ -100,6 +110,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } catch (error) {
             console.error('Fetch profile error:', error)
         } finally {
+            // Marcar como completado para evitar que o timeout force loading=false novamente
+            loadingCompleted.current = true
             setLoading(false)
         }
     }

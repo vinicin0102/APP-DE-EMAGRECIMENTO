@@ -61,8 +61,16 @@
 }
 
 .modal-logo {
-    font-size: 3rem;
     margin-bottom: var(--spacing-md);
+    display: flex;
+    justify-content: center;
+}
+
+.modal-logo img {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 50%;
 }
 
 .modal-header h2 {

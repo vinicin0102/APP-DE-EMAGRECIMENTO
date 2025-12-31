@@ -1,16 +1,19 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../lib/supabase'
 import type { WeightLog } from '../lib/supabase'
 
 export function useWeightLogs() {
     const [logs, setLogs] = useState<WeightLog[]>([])
     const [loading, setLoading] = useState(true)
+    const isMounted = useRef(true)
 
     const fetchLogs = async () => {
+        if (!isMounted.current) return
+
         try {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) {
-                setLoading(false)
+                if (isMounted.current) setLoading(false)
                 return
             }
 
@@ -21,6 +24,8 @@ export function useWeightLogs() {
                 .order('logged_at', { ascending: false })
                 .limit(30)
 
+            if (!isMounted.current) return
+
             if (error) {
                 console.warn('Tabela weight_logs não encontrada ou erro:', error.message)
                 setLogs([])
@@ -29,14 +34,31 @@ export function useWeightLogs() {
             }
         } catch (error) {
             console.error('Erro ao buscar logs de peso:', error)
-            setLogs([])
+            if (isMounted.current) {
+                setLogs([])
+            }
         } finally {
-            setLoading(false)
+            if (isMounted.current) {
+                setLoading(false)
+            }
         }
     }
 
     useEffect(() => {
+        isMounted.current = true
         fetchLogs()
+
+        // Timeout de segurança - força loading false após 6 segundos
+        const safetyTimeout = setTimeout(() => {
+            if (isMounted.current) {
+                setLoading(false)
+            }
+        }, 6000)
+
+        return () => {
+            isMounted.current = false
+            clearTimeout(safetyTimeout)
+        }
     }, [])
 
     const addLog = async (weight: number, notes?: string) => {
