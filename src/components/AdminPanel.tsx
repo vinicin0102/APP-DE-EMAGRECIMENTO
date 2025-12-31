@@ -113,11 +113,11 @@ export default function AdminPanel() {
     const [challengeForm, setChallengeForm] = useState<{
         title: string; description: string; emoji: string; color: string;
         duration_days: number; difficulty: 'Fácil' | 'Intermediário' | 'Avançado'; reward_points: number;
-        is_premium: boolean; price: number; checkout_url: string;
+        is_premium: boolean; price: number; checkout_url: string; gateway_product_id: string;
     }>({
         title: '', description: '', emoji: '🎯', color: '#00C853',
         duration_days: 7, difficulty: 'Fácil', reward_points: 100,
-        is_premium: false, price: 0, checkout_url: ''
+        is_premium: false, price: 0, checkout_url: '', gateway_product_id: ''
     })
 
     const [moduleForm, setModuleForm] = useState({
@@ -320,14 +320,15 @@ export default function AdminPanel() {
                 duration_days: challenge.duration_days,
                 difficulty: challenge.difficulty, reward_points: challenge.reward_points,
                 is_premium: challenge.is_premium || false, price: challenge.price || 0,
-                checkout_url: challenge.checkout_url || ''
+                checkout_url: challenge.checkout_url || '',
+                gateway_product_id: challenge.gateway_product_id || ''
             })
         } else {
             setEditingItem(null)
             setChallengeForm({
                 title: '', description: '', emoji: '🎯', color: '#00C853',
                 duration_days: 7, difficulty: 'Fácil', reward_points: 100,
-                is_premium: false, price: 0, checkout_url: ''
+                is_premium: false, price: 0, checkout_url: '', gateway_product_id: ''
             })
         }
         setModalType('challenge')
@@ -1125,6 +1126,15 @@ export default function AdminPanel() {
                                                     placeholder="https://pay.kiwify.com.br/..."
                                                 />
                                                 <span className="form-hint">Cole aqui o link do seu gateway (Mercado Pago, Stripe, Kiwify, etc)</span>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>🔑 ID do Produto (Webhook)</label>
+                                                <input
+                                                    value={challengeForm.gateway_product_id}
+                                                    onChange={e => setChallengeForm({ ...challengeForm, gateway_product_id: e.target.value })}
+                                                    placeholder="Ex: kiwify_prod_123..."
+                                                />
+                                                <span className="form-hint">ID único do produto na plataforma de pagamento (para liberação automática)</span>
                                             </div>
                                         </>
                                     )}

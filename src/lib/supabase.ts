@@ -47,6 +47,7 @@ export interface Challenge {
     is_premium?: boolean
     price?: number
     checkout_url?: string
+    gateway_product_id?: string
 }
 
 export interface ChallengeParticipant {
