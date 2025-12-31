@@ -205,13 +205,13 @@
 /* Desktop */
 @media (min-width: 769px) {
     .bottom-nav-container {
-        max-width: 600px;
+        max-width: 750px;
         padding: var(--spacing-sm) var(--spacing-md);
     }
 
     .nav-item {
-        padding: var(--spacing-sm) var(--spacing-lg);
-        min-width: 70px;
+        padding: var(--spacing-sm) var(--spacing-md);
+        min-width: 60px;
     }
 
     .nav-icon {
