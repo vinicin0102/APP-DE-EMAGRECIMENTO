@@ -1336,3 +1336,118 @@
     text-align: center;
     font-weight: 600;
 }
+
+/* ================================================
+   PREMIUM CHALLENGE STYLES
+   ================================================ */
+
+/* Premium Section in Form */
+.form-section {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-lg);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+}
+
+.form-section h4 {
+    font-size: 0.95rem;
+    margin-bottom: var(--spacing-md);
+    color: #7C4DFF;
+}
+
+.premium-section {
+    background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(255, 64, 129, 0.08));
+    border-color: rgba(124, 77, 255, 0.2);
+}
+
+/* Checkbox Group */
+.checkbox-group {
+    margin-bottom: var(--spacing-md);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    accent-color: #7C4DFF;
+    cursor: pointer;
+}
+
+.form-info {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+    padding: var(--spacing-sm);
+    background: rgba(0, 200, 83, 0.1);
+    border-radius: var(--radius-md);
+    border-left: 3px solid #00C853;
+}
+
+/* Premium Card Styles */
+.item-card.premium-card {
+    background: linear-gradient(135deg, rgba(124, 77, 255, 0.08), rgba(255, 64, 129, 0.05));
+    border-color: rgba(124, 77, 255, 0.3);
+}
+
+.item-emoji {
+    position: relative;
+}
+
+.premium-badge-small {
+    position: absolute;
+    bottom: -4px;
+    right: -4px;
+    font-size: 0.8rem;
+    background: linear-gradient(135deg, #7C4DFF, #FF4081);
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(124, 77, 255, 0.4);
+}
+
+.premium-tag {
+    display: inline-block;
+    margin-left: var(--spacing-xs);
+    padding: 2px 6px;
+    font-size: 0.6rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #7C4DFF, #FF4081);
+    color: white;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    vertical-align: middle;
+}
+
+/* Price Tags */
+.price-tag {
+    font-weight: 600;
+}
+
+.price-tag.free {
+    background: rgba(0, 200, 83, 0.2);
+    color: #00C853;
+}
+
+.price-tag.diamond {
+    background: linear-gradient(135deg, rgba(124, 77, 255, 0.2), rgba(255, 64, 129, 0.2));
+    color: #7C4DFF;
+}
+
+.item-meta .price-tag {
+    background: rgba(255, 152, 0, 0.2);
+    color: #FF9800;
+}

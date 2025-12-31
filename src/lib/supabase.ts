@@ -44,6 +44,8 @@ export interface Challenge {
     start_date: string
     end_date: string
     created_at: string
+    is_premium?: boolean
+    price?: number
 }
 
 export interface ChallengeParticipant {

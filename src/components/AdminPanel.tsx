@@ -113,9 +113,11 @@ export default function AdminPanel() {
     const [challengeForm, setChallengeForm] = useState<{
         title: string; description: string; emoji: string; color: string;
         duration_days: number; difficulty: 'Fácil' | 'Intermediário' | 'Avançado'; reward_points: number;
+        is_premium: boolean; price: number;
     }>({
         title: '', description: '', emoji: '🎯', color: '#00C853',
-        duration_days: 7, difficulty: 'Fácil', reward_points: 100
+        duration_days: 7, difficulty: 'Fácil', reward_points: 100,
+        is_premium: false, price: 0
     })
 
     const [moduleForm, setModuleForm] = useState({
@@ -316,11 +318,12 @@ export default function AdminPanel() {
                 title: challenge.title, description: challenge.description,
                 emoji: challenge.emoji, color: challenge.color,
                 duration_days: challenge.duration_days,
-                difficulty: challenge.difficulty, reward_points: challenge.reward_points
+                difficulty: challenge.difficulty, reward_points: challenge.reward_points,
+                is_premium: challenge.is_premium || false, price: challenge.price || 0
             })
         } else {
             setEditingItem(null)
-            setChallengeForm({ title: '', description: '', emoji: '🎯', color: '#00C853', duration_days: 7, difficulty: 'Fácil', reward_points: 100 })
+            setChallengeForm({ title: '', description: '', emoji: '🎯', color: '#00C853', duration_days: 7, difficulty: 'Fácil', reward_points: 100, is_premium: false, price: 0 })
         }
         setModalType('challenge')
         setShowModal(true)
@@ -777,16 +780,29 @@ export default function AdminPanel() {
                                 </div>
                                 <div className="cards-grid">
                                     {challenges.map(challenge => (
-                                        <div key={challenge.id} className="item-card" style={{ borderColor: challenge.color }}>
-                                            <div className="item-emoji" style={{ background: `${challenge.color}20` }}>{challenge.emoji}</div>
+                                        <div key={challenge.id} className={`item-card ${challenge.is_premium ? 'premium-card' : ''}`} style={{ borderColor: challenge.color }}>
+                                            <div className="item-emoji" style={{ background: `${challenge.color}20` }}>
+                                                {challenge.emoji}
+                                                {challenge.is_premium && <span className="premium-badge-small">💎</span>}
+                                            </div>
                                             <div className="item-info">
-                                                <h4>{challenge.title}</h4>
+                                                <h4>
+                                                    {challenge.title}
+                                                    {challenge.is_premium && <span className="premium-tag">PREMIUM</span>}
+                                                </h4>
                                                 <p>{challenge.description}</p>
                                                 <div className="item-meta">
                                                     <span className={`difficulty ${challenge.difficulty.toLowerCase()}`}>{challenge.difficulty}</span>
                                                     <span>{challenge.duration_days} dias</span>
                                                     <span>🏆 {challenge.reward_points} pts</span>
                                                     <span>👥 {challenge.participants_count}</span>
+                                                    {challenge.is_premium && challenge.price && challenge.price > 0 ? (
+                                                        <span className="price-tag">💰 R$ {challenge.price.toFixed(2)}</span>
+                                                    ) : challenge.is_premium ? (
+                                                        <span className="price-tag diamond">💎 Diamond</span>
+                                                    ) : (
+                                                        <span className="price-tag free">🆓 Grátis</span>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className="item-actions">
@@ -1030,6 +1046,40 @@ export default function AdminPanel() {
                                         <option value="Fácil">Fácil</option><option value="Intermediário">Intermediário</option><option value="Avançado">Avançado</option>
                                     </select>
                                 </div>
+
+                                {/* Seção Premium */}
+                                <div className="form-section premium-section">
+                                    <h4>💎 Configuração Premium</h4>
+                                    <div className="form-group checkbox-group">
+                                        <label className="checkbox-label">
+                                            <input
+                                                type="checkbox"
+                                                checked={challengeForm.is_premium}
+                                                onChange={e => setChallengeForm({ ...challengeForm, is_premium: e.target.checked })}
+                                            />
+                                            <span className="checkmark"></span>
+                                            Desafio Premium (Pago)
+                                        </label>
+                                    </div>
+                                    {challengeForm.is_premium && (
+                                        <div className="form-group">
+                                            <label>💰 Preço (R$)</label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                min="0"
+                                                value={challengeForm.price}
+                                                onChange={e => setChallengeForm({ ...challengeForm, price: parseFloat(e.target.value) || 0 })}
+                                                placeholder="Ex: 29.90"
+                                            />
+                                            <span className="form-hint">Deixe 0 para gratuito (usuários Diamond têm acesso)</span>
+                                        </div>
+                                    )}
+                                    {!challengeForm.is_premium && (
+                                        <p className="form-info">🆓 Este desafio será gratuito para todos os usuários</p>
+                                    )}
+                                </div>
+
                                 <button className="btn-primary btn-save" onClick={saveChallenge}>💾 Salvar</button>
                             </>
                         )}
