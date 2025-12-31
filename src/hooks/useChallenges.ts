@@ -14,11 +14,11 @@ export function useChallenges() {
 
         try {
             setLoading(true)
+            // Busca todos os desafios, ordenados por data de criação
             const { data, error: queryError } = await supabase
                 .from('challenges')
                 .select('*')
-                .gte('end_date', new Date().toISOString())
-                .order('participants_count', { ascending: false })
+                .order('created_at', { ascending: false })
 
             if (!isMounted.current) return
 
@@ -26,6 +26,7 @@ export function useChallenges() {
                 console.warn('Tabela challenges não encontrada ou erro:', queryError.message)
                 setChallenges([])
             } else {
+                console.log('Desafios carregados:', data?.length || 0, data)
                 setChallenges(data || [])
             }
         } catch (err) {

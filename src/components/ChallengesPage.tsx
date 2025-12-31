@@ -17,6 +17,7 @@ interface PremiumChallenge {
     badge_name: string
     is_premium: boolean
     price: number
+    checkout_url?: string
     start_date: string
     end_date: string
 }
@@ -145,7 +146,25 @@ export default function ChallengesPage() {
 
     const loading = challengesLoading && !forceLoaded
 
-    const allChallenges = [...premiumChallenges, ...freeChallenges]
+    // Converter desafios do Supabase para o formato PremiumChallenge e usar como fonte
+    const allChallenges: PremiumChallenge[] = challenges.map(c => ({
+        id: c.id,
+        title: c.title,
+        description: c.description,
+        participants_count: c.participants_count || 0,
+        duration_days: c.duration_days,
+        difficulty: c.difficulty,
+        reward_points: c.reward_points,
+        color: c.color || '#00C853',
+        emoji: c.emoji || '🎯',
+        badge_icon: c.emoji || '🏆', // Usa o emoji como ícone do badge por padrão
+        badge_name: `Mestre ${c.title.split(' ')[0]}`, // Gera um nome de badge baseado no título
+        is_premium: c.is_premium || false,
+        price: c.price || 0,
+        checkout_url: c.checkout_url,
+        start_date: c.start_date,
+        end_date: c.end_date
+    }))
 
     const handlePurchase = (challenge: PremiumChallenge) => {
         setSelectedChallenge(challenge)
@@ -155,13 +174,20 @@ export default function ChallengesPage() {
     const confirmPurchase = () => {
         if (!selectedChallenge) return
 
-        // Adicionar aos desafios comprados
-        const updated = [...purchasedChallenges, selectedChallenge.id]
-        setPurchasedChallenges(updated)
-        localStorage.setItem('purchased_challenges', JSON.stringify(updated))
-
-        setShowPurchaseModal(false)
-        setSelectedChallenge(null)
+        if (selectedChallenge.checkout_url) {
+            // Abre o link de checkout em nova aba
+            window.open(selectedChallenge.checkout_url, '_blank')
+            // Opcional: já marcar como comprado localmente para teste, 
+            // mas idealmente isso viria via webhook/confirmação
+        } else {
+            // Fallback: Adicionar aos desafios comprados (simulação antiga)
+            const updated = [...purchasedChallenges, selectedChallenge.id]
+            setPurchasedChallenges(updated)
+            localStorage.setItem('purchased_challenges', JSON.stringify(updated))
+            alert('✅ Compra realizada com sucesso! (Modo Simulação)')
+            setShowPurchaseModal(false)
+            setSelectedChallenge(null)
+        }
     }
 
     const handleJoinFree = async (challengeId: string) => {

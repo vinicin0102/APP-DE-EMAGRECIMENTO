@@ -46,6 +46,7 @@ export interface Challenge {
     created_at: string
     is_premium?: boolean
     price?: number
+    checkout_url?: string
 }
 
 export interface ChallengeParticipant {

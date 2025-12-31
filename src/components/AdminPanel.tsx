@@ -113,11 +113,11 @@ export default function AdminPanel() {
     const [challengeForm, setChallengeForm] = useState<{
         title: string; description: string; emoji: string; color: string;
         duration_days: number; difficulty: 'Fácil' | 'Intermediário' | 'Avançado'; reward_points: number;
-        is_premium: boolean; price: number;
+        is_premium: boolean; price: number; checkout_url: string;
     }>({
         title: '', description: '', emoji: '🎯', color: '#00C853',
         duration_days: 7, difficulty: 'Fácil', reward_points: 100,
-        is_premium: false, price: 0
+        is_premium: false, price: 0, checkout_url: ''
     })
 
     const [moduleForm, setModuleForm] = useState({
@@ -319,28 +319,69 @@ export default function AdminPanel() {
                 emoji: challenge.emoji, color: challenge.color,
                 duration_days: challenge.duration_days,
                 difficulty: challenge.difficulty, reward_points: challenge.reward_points,
-                is_premium: challenge.is_premium || false, price: challenge.price || 0
+                is_premium: challenge.is_premium || false, price: challenge.price || 0,
+                checkout_url: challenge.checkout_url || ''
             })
         } else {
             setEditingItem(null)
-            setChallengeForm({ title: '', description: '', emoji: '🎯', color: '#00C853', duration_days: 7, difficulty: 'Fácil', reward_points: 100, is_premium: false, price: 0 })
+            setChallengeForm({
+                title: '', description: '', emoji: '🎯', color: '#00C853',
+                duration_days: 7, difficulty: 'Fácil', reward_points: 100,
+                is_premium: false, price: 0, checkout_url: ''
+            })
         }
         setModalType('challenge')
         setShowModal(true)
     }
 
     const saveChallenge = async () => {
-        const now = new Date()
-        const endDate = new Date(now.getTime() + challengeForm.duration_days * 24 * 60 * 60 * 1000)
-        if (editingItem) {
-            await supabase.from('challenges').update({ ...challengeForm, end_date: endDate.toISOString() }).eq('id', editingItem.id)
-            addLog(`Editou desafio: ${challengeForm.title}`)
-        } else {
-            await supabase.from('challenges').insert({ ...challengeForm, start_date: now.toISOString(), end_date: endDate.toISOString(), participants_count: 0 })
-            addLog(`Criou desafio: ${challengeForm.title}`)
+        console.log('🔄 saveChallenge chamado!', challengeForm)
+
+        // Validação básica
+        if (!challengeForm.title.trim()) {
+            alert('❌ O título é obrigatório!')
+            return
         }
-        setShowModal(false)
-        fetchData()
+
+        try {
+            const now = new Date()
+            const endDate = new Date(now.getTime() + challengeForm.duration_days * 24 * 60 * 60 * 1000)
+
+            if (editingItem) {
+                const { error } = await supabase.from('challenges').update({
+                    ...challengeForm,
+                    end_date: endDate.toISOString()
+                }).eq('id', editingItem.id)
+
+                if (error) {
+                    console.error('Erro ao atualizar desafio:', error)
+                    alert(`Erro ao atualizar desafio: ${error.message}`)
+                    return
+                }
+                addLog(`Editou desafio: ${challengeForm.title}`)
+                alert('✅ Desafio atualizado com sucesso!')
+            } else {
+                const { error } = await supabase.from('challenges').insert({
+                    ...challengeForm,
+                    start_date: now.toISOString(),
+                    end_date: endDate.toISOString(),
+                    participants_count: 0
+                })
+
+                if (error) {
+                    console.error('Erro ao criar desafio:', error)
+                    alert(`Erro ao criar desafio: ${error.message}`)
+                    return
+                }
+                addLog(`Criou desafio: ${challengeForm.title}`)
+                alert('✅ Desafio criado com sucesso!')
+            }
+            setShowModal(false)
+            await fetchData()
+        } catch (err: any) {
+            console.error('Erro inesperado:', err)
+            alert(`Erro inesperado: ${err.message || 'Tente novamente'}`)
+        }
     }
 
     const deleteChallenge = async (id: string, title: string) => {
@@ -1062,18 +1103,30 @@ export default function AdminPanel() {
                                         </label>
                                     </div>
                                     {challengeForm.is_premium && (
-                                        <div className="form-group">
-                                            <label>💰 Preço (R$)</label>
-                                            <input
-                                                type="number"
-                                                step="0.01"
-                                                min="0"
-                                                value={challengeForm.price}
-                                                onChange={e => setChallengeForm({ ...challengeForm, price: parseFloat(e.target.value) || 0 })}
-                                                placeholder="Ex: 29.90"
-                                            />
-                                            <span className="form-hint">Deixe 0 para gratuito (usuários Diamond têm acesso)</span>
-                                        </div>
+                                        <>
+                                            <div className="form-group">
+                                                <label>💰 Preço (R$)</label>
+                                                <input
+                                                    type="number"
+                                                    step="0.01"
+                                                    min="0"
+                                                    value={challengeForm.price}
+                                                    onChange={e => setChallengeForm({ ...challengeForm, price: parseFloat(e.target.value) || 0 })}
+                                                    placeholder="Ex: 29.90"
+                                                />
+                                                <span className="form-hint">Deixe 0 para gratuito (usuários Diamond têm acesso)</span>
+                                            </div>
+                                            <div className="form-group">
+                                                <label>🔗 Link de Pagamento (Checkout)</label>
+                                                <input
+                                                    type="url"
+                                                    value={challengeForm.checkout_url}
+                                                    onChange={e => setChallengeForm({ ...challengeForm, checkout_url: e.target.value })}
+                                                    placeholder="https://pay.kiwify.com.br/..."
+                                                />
+                                                <span className="form-hint">Cole aqui o link do seu gateway (Mercado Pago, Stripe, Kiwify, etc)</span>
+                                            </div>
+                                        </>
                                     )}
                                     {!challengeForm.is_premium && (
                                         <p className="form-info">🆓 Este desafio será gratuito para todos os usuários</p>
