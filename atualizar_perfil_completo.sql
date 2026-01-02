@@ -12,6 +12,7 @@ ON CONFLICT (id) DO NOTHING;
 DROP POLICY IF EXISTS "Avatares Publicos" ON storage.objects;
 DROP POLICY IF EXISTS "Avatar Upload Auth" ON storage.objects;
 DROP POLICY IF EXISTS "Avatar Update Auth" ON storage.objects;
+DROP POLICY IF EXISTS "Avatar Delete Auth" ON storage.objects;
 
 -- Leitura Pública
 CREATE POLICY "Avatares Publicos" ON storage.objects
