@@ -14,6 +14,9 @@ import ProfilePage from './components/ProfilePage'
 import Support from './components/Support'
 import AdminPanel from './components/AdminPanel'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
+import AIAssistantsButton from './components/AIAssistantsButton'
+
+
 
 const ADMIN_EMAIL = 'admin@gmail.com'
 
@@ -206,6 +209,7 @@ function App() {
         {activeTab === 'profile' && <ProfilePage />}
         {activeTab === 'support' && <Support />}
         {activeTab === 'admin' && <AdminPanel />}
+        <AIAssistantsButton />
       </main>
       <PWAInstallPrompt />
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
