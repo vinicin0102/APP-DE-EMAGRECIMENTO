@@ -5,7 +5,7 @@ import type { User, Post, Challenge } from '../lib/supabase'
 import './AdminPanel.css'
 import PaymentsPage from './PaymentsPage'
 
-const ADMIN_EMAIL = 'admin@gmail.com'
+const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com']
 
 // Interfaces
 interface Lesson {
@@ -133,11 +133,11 @@ export default function AdminPanel() {
     const [aiForm, setAiForm] = useState({ keyword: '', response: '' })
     const [userForm, setUserForm] = useState({ name: '', points: 0, streak_days: 0, weight_goal: 0 })
 
-    const isAdmin = profile?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim()
+    const isAdmin = profile?.email && ADMIN_EMAILS.some(email => email.toLowerCase() === profile.email?.toLowerCase().trim())
 
     console.log('Admin Check:', {
         currentEmail: profile?.email,
-        expectedEmail: ADMIN_EMAIL,
+        allowedEmails: ADMIN_EMAILS,
         isAdmin
     })
 
@@ -771,7 +771,7 @@ export default function AdminPanel() {
                                                         <td className="actions-cell">
                                                             <button className="btn-icon edit" onClick={() => openUserModal(user)} title="Editar">✏️</button>
                                                             <button className="btn-icon warn" onClick={() => openBanModal(user)} title="Gerenciar Ban">⚖️</button>
-                                                            <button className="btn-icon delete" onClick={() => deleteUser(user.id, user.name)} title="Excluir" disabled={user.email === ADMIN_EMAIL}>🗑️</button>
+                                                            <button className="btn-icon delete" onClick={() => deleteUser(user.id, user.name)} title="Excluir" disabled={ADMIN_EMAILS.includes(user.email || '')}>🗑️</button>
                                                         </td>
                                                     </tr>
                                                 )
