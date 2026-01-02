@@ -3,6 +3,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import type { User, Post, Challenge } from '../lib/supabase'
 import './AdminPanel.css'
+import PaymentsPage from './PaymentsPage'
 
 const ADMIN_EMAIL = 'admin@gmail.com'
 
@@ -92,7 +93,7 @@ const defaultAIResponses: AIResponse[] = [
 
 export default function AdminPanel() {
     const { profile } = useAuth()
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'posts' | 'challenges' | 'modules' | 'ai' | 'settings' | 'logs'>('dashboard')
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'posts' | 'challenges' | 'modules' | 'ai' | 'settings' | 'logs' | 'payments'>('dashboard')
     const [users, setUsers] = useState<User[]>([])
     const [posts, setPosts] = useState<(Post & { user?: User })[]>([])
     const [challenges, setChallenges] = useState<Challenge[]>([])
@@ -606,6 +607,7 @@ export default function AdminPanel() {
                     { id: 'ai', label: '🤖 IA' },
                     { id: 'settings', label: '⚙️ Config' },
                     { id: 'logs', label: '📋 Logs' },
+                    { id: 'payments', label: '💳 Pagamentos' },
                 ].map(tab => (
                     <button
                         key={tab.id}
@@ -1057,6 +1059,11 @@ export default function AdminPanel() {
                                     )}
                                 </div>
                             </div>
+                        )}
+
+                        {/* Pagamentos */}
+                        {activeTab === 'payments' && (
+                            <PaymentsPage />
                         )}
                     </>
                 )}
