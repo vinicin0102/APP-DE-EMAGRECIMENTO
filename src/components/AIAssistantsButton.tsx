@@ -70,15 +70,20 @@ async function fetchOpenAIResponse(messages: Message[], expert: string) {
             })
         })
 
-        const data = await response.json()
-        console.log('Resposta OpenAI:', data)
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}))
+            const errorMessage = errorData?.error?.message || `Status ${response.status}`
+            console.error('Erro API OpenAI:', errorMessage)
 
-        if (data.error) {
-            console.error('OpenAI Error Detalhado:', data.error)
-            return `Erro na IA: ${data.error.message}`
+            if (response.status === 429) return "Erro: Limite de uso excedido (Quota) na OpenAI. Verifique seu saldo/plano."
+            if (response.status === 401) return "Erro: Chave de API inválida."
+
+            return `Erro da API (${response.status}): ${errorMessage}`
         }
 
-        return data.choices?.[0]?.message?.content || "Desculpe, a IA ficou muda."
+        const data = await response.json()
+        return data.choices?.[0]?.message?.content || "A IA não retornou texto."
+
     } catch (error: any) {
         console.error('Erro de Conexão OpenAI:', error)
         return `Erro de conexão: ${error.message}`
