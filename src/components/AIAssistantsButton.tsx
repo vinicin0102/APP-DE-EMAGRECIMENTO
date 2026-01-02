@@ -43,11 +43,13 @@ const SYSTEM_PROMPTS = {
     Não prescreva treinos detalhados, sugira falar com a Personal.`
 }
 
-const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
-
 async function fetchOpenAIResponse(messages: Message[], expert: string) {
-    if (!OPENAI_API_KEY) {
-        return "Erro: Chave de API não configurada. Verifique o arquivo .env.local"
+    const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+
+    console.log('Tentando usar API Key:', apiKey ? `Presente (Inicia com ${apiKey.substring(0, 5)}...)` : 'AUSENTE')
+
+    if (!apiKey) {
+        return "Erro: Chave de API não encontrada no .env.local"
     }
 
     try {
@@ -55,7 +57,7 @@ async function fetchOpenAIResponse(messages: Message[], expert: string) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${OPENAI_API_KEY}`
+                'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
                 model: 'gpt-3.5-turbo',
@@ -69,16 +71,17 @@ async function fetchOpenAIResponse(messages: Message[], expert: string) {
         })
 
         const data = await response.json()
+        console.log('Resposta OpenAI:', data)
 
         if (data.error) {
-            console.error('OpenAI Error:', data.error)
-            throw new Error(data.error.message || 'Erro na API')
+            console.error('OpenAI Error Detalhado:', data.error)
+            return `Erro na IA: ${data.error.message}`
         }
 
-        return data.choices?.[0]?.message?.content || "Desculpe, não consegui formular uma resposta."
-    } catch (error) {
-        console.error('Erro OpenAI:', error)
-        return "Desculpe musa, tive um problema de conexão. Tente novamente! 😓"
+        return data.choices?.[0]?.message?.content || "Desculpe, a IA ficou muda."
+    } catch (error: any) {
+        console.error('Erro de Conexão OpenAI:', error)
+        return `Erro de conexão: ${error.message}`
     }
 }
 
