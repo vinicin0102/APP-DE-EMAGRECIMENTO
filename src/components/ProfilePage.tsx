@@ -55,21 +55,31 @@ export default function ProfilePage() {
             const fileName = `${profile?.id}-${Date.now()}.${fileExt}`
             const filePath = `${fileName}`
 
+            console.log('Iniciando upload para:', filePath)
+
             const { error: uploadError } = await supabase.storage
                 .from('avatars')
-                .upload(filePath, file)
+                .upload(filePath, file, { upsert: true })
 
-            if (uploadError) throw uploadError
+            if (uploadError) {
+                console.error('Erro detalhado no Storage:', uploadError)
+                throw uploadError
+            }
 
+            console.log('Upload concluído, obtendo URL pública...')
             const { data: { publicUrl } } = supabase.storage
                 .from('avatars')
                 .getPublicUrl(filePath)
 
-            await updateProfile({ avatar_url: publicUrl })
+            console.log('URL Pública:', publicUrl)
+            console.log('Atualizando perfil no banco...')
 
-        } catch (error) {
-            console.error('Erro no upload:', error)
-            alert('Erro ao atualizar foto. Verifique se executou o script SQL de atualização.')
+            await updateProfile({ avatar_url: publicUrl })
+            console.log('Perfil atualizado com sucesso!')
+
+        } catch (error: any) {
+            console.error('Erro Completo no Upload:', error)
+            alert(`Erro ao atualizar foto: ${error.message || error.error_description || 'Erro desconhecido'}`)
         } finally {
             setUploadingAvatar(false)
         }
