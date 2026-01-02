@@ -133,7 +133,13 @@ export default function AdminPanel() {
     const [aiForm, setAiForm] = useState({ keyword: '', response: '' })
     const [userForm, setUserForm] = useState({ name: '', points: 0, streak_days: 0, weight_goal: 0 })
 
-    const isAdmin = profile?.email === ADMIN_EMAIL
+    const isAdmin = profile?.email?.toLowerCase().trim() === ADMIN_EMAIL.toLowerCase().trim()
+
+    console.log('Admin Check:', {
+        currentEmail: profile?.email,
+        expectedEmail: ADMIN_EMAIL,
+        isAdmin
+    })
 
     useEffect(() => {
         if (isAdmin) {
