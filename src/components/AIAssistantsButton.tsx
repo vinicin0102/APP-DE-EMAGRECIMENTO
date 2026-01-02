@@ -12,6 +12,8 @@ type ExpertConfig = {
     role: string
     avatar: string
     greeting: string
+    keywords: Record<string, string>
+    defaultResponse: string
 }
 
 const EXPERTS: Record<string, ExpertConfig> = {
@@ -20,12 +22,30 @@ const EXPERTS: Record<string, ExpertConfig> = {
         role: 'Personal Trainer',
         avatar: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&q=80',
         greeting: 'Oi musa! 💪 Sou a Camila, sua personal. Vamos botar esse corpo pra mexer? Me conte seu objetivo ou peça um treino rápido!',
+        keywords: {
+            treino: 'Para hoje, sugiro um HIIT de 20 minutos! 🔥\n30s Polichinelos\n30s Agachamento\n30s Abdominal\nRepita 4x sem descanso!',
+            perna: 'Quer pernas torneadas? Agachamento sumô e Afundo são essenciais. Faça 3 séries de 15 repetições bem concentradas!',
+            barriga: 'Para secar a barriga, foque na alimentação e faça prancha isométrica. Tente segurar 1 minuto hoje?',
+            iniciante: 'Comece devagar! Caminhada acelerada de 30min e exercícios com o peso do corpo são ótimos para começar.',
+            braço: 'Para braços firmes: Flexão de braço (pode ser com joelho no chão) e Tríceps no banco. 3 séries de 12 repetições!',
+            gluteo: 'Bumbum na nuca? Elevação pélvica é o melhor exercicio! Faça 4 séries de 15 repetições com contração máxima no topo. 🍑'
+        },
+        defaultResponse: 'Adorei a energia! 🔥 Para te ajudar melhor com seu treino, me diga se você quer focar em pernas, glúteos, braços, cardio ou se precisa de algo rápido para fazer em casa!'
     },
     'Dr Jessica': {
         name: 'Dr Jessica',
         role: 'Nutricionista',
         avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&q=80',
         greeting: 'Olá querida! 🥗 Sou a Jessica. Estou aqui para te ajudar a comer bem sem sofrimento. Tem dúvida sobre algum alimento ou quer uma receita?',
+        keywords: {
+            receita: 'Que tal uma panqueca de banana fit? 🍌\n1 banana amassada\n2 ovos\nCanela a gosto\nMisture e frite com um fio de óleo de coco. Delícia!',
+            doce: 'Vontade de doce? Tente chocolate 70% cacau ou frutas vermelhas congeladas. Ajuda muito na ansiedade!',
+            jantar: 'À noite prefira proteínas leves e saladas. Um omelete com espinafre ou frango grelhado com legumes são ótimos.',
+            jejum: 'O jejum 16h é ótimo para desinflamar. Jante às 20h e volte a comer ao meio-dia. Beba muita água nesse período!',
+            almoco: 'No almoço, monte um prato colorido: 50% salada, 25% proteína (frango/peixe/carne magra) e 25% carboidrato complexo (batata doce/arroz integral). 🍽️',
+            cafe: 'Para começar o dia bem: Ovos mexidos ou cozidos são perfeitos! Acompanhe com uma fruta e café sem açúcar. ☕'
+        },
+        defaultResponse: 'Entendi! Lembre-se que o equilíbrio é tudo. 🍎 Se quiser dicas específicas sobre café da manhã, almoço, jantar, receitas ou como controlar a vontade de doces, é só pedir!'
     }
 }
 
@@ -43,13 +63,28 @@ const SYSTEM_PROMPTS = {
     Não prescreva treinos detalhados, sugira falar com a Personal.`
 }
 
+function generateLocalResponse(message: string, expertName: string): string {
+    const expert = EXPERTS[expertName]
+    const lowerInput = message.toLowerCase()
+
+    // Busca keyword
+    for (const key in expert.keywords) {
+        if (lowerInput.includes(key)) {
+            return expert.keywords[key]
+        }
+    }
+
+    return expert.defaultResponse
+}
+
 async function fetchOpenAIResponse(messages: Message[], expert: string) {
     const apiKey = import.meta.env.VITE_OPENAI_API_KEY
+    const lastUserMessage = messages[messages.length - 1].content
 
-    console.log('Tentando usar API Key:', apiKey ? `Presente (Inicia com ${apiKey.substring(0, 5)}...)` : 'AUSENTE')
-
+    // Modo Fallback imediato se não tiver KEY
     if (!apiKey) {
-        return "Erro: Chave de API não encontrada no .env.local"
+        console.warn('API Key ausente, usando modo local.')
+        return generateLocalResponse(lastUserMessage, expert)
     }
 
     try {
@@ -71,22 +106,16 @@ async function fetchOpenAIResponse(messages: Message[], expert: string) {
         })
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}))
-            const errorMessage = errorData?.error?.message || `Status ${response.status}`
-            console.error('Erro API OpenAI:', errorMessage)
-
-            if (response.status === 429) return "Erro: Limite de uso excedido (Quota) na OpenAI. Verifique seu saldo/plano."
-            if (response.status === 401) return "Erro: Chave de API inválida."
-
-            return `Erro da API (${response.status}): ${errorMessage}`
+            console.warn(`Falha na API OpenAI (${response.status}). Ativando modo local.`)
+            return generateLocalResponse(lastUserMessage, expert)
         }
 
         const data = await response.json()
-        return data.choices?.[0]?.message?.content || "A IA não retornou texto."
+        return data.choices?.[0]?.message?.content || generateLocalResponse(lastUserMessage, expert)
 
     } catch (error: any) {
-        console.error('Erro de Conexão OpenAI:', error)
-        return `Erro de conexão: ${error.message}`
+        console.error('Erro de Conexão OpenAI, ativando fallback:', error)
+        return generateLocalResponse(lastUserMessage, expert)
     }
 }
 
