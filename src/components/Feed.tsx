@@ -18,11 +18,40 @@ export default function Feed() {
     const { posts, loading: postsLoading, createPost, likePost, refetch } = usePosts()
     const [newPost, setNewPost] = useState('')
     const [imageUrl, setImageUrl] = useState('')
-    const [showImageInput, setShowImageInput] = useState(false)
+
     const [posting, setPosting] = useState(false)
     const [localLikes, setLocalLikes] = useState<Record<string, boolean>>({})
     const [postExtras, setPostExtras] = useState<Record<string, PostWithComments>>({})
     const [forceLoaded, setForceLoaded] = useState(false)
+    const [editingPost, setEditingPost] = useState<{ id: string, content: string } | null>(null)
+    const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
+    const [uploading, setUploading] = useState(false)
+
+    const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        try {
+            if (!event.target.files || event.target.files.length === 0) return
+            const file = event.target.files[0]
+            setUploading(true)
+
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${Math.random()}.${fileExt}`
+            const filePath = `${user?.id}/${fileName}`
+
+            const { error: uploadError } = await supabase.storage
+                .from('posts-images')
+                .upload(filePath, file)
+
+            if (uploadError) throw uploadError
+
+            const { data } = supabase.storage.from('posts-images').getPublicUrl(filePath)
+            setImageUrl(data.publicUrl)
+        } catch (error: any) {
+            console.error('Erro no upload:', error)
+            alert('Erro ao enviar imagem. Verifique no Admin se o bucket "posts-images" foi criado.')
+        } finally {
+            setUploading(false)
+        }
+    }
 
     // Timeout de segurança - força carregamento após 5 segundos
     useEffect(() => {
@@ -82,7 +111,8 @@ export default function Feed() {
         await createPost(newPost, imageUrl || undefined)
         setNewPost('')
         setImageUrl('')
-        setShowImageInput(false)
+        setImageUrl('')
+        /* showImageInput removido */
         setPosting(false)
     }
 
@@ -94,10 +124,18 @@ export default function Feed() {
 
     const handleDeletePost = async (postId: string) => {
         if (!user) return
+        setActiveMenuId(null)
         if (confirm('Tem certeza que deseja excluir este post?')) {
             await supabase.from('posts').delete().eq('id', postId)
             refetch()
         }
+    }
+
+    const handleUpdatePost = async () => {
+        if (!editingPost || !editingPost.content.trim()) return
+        await supabase.from('posts').update({ content: editingPost.content }).eq('id', editingPost.id)
+        setEditingPost(null)
+        refetch()
     }
 
     const toggleComments = async (postId: string) => {
@@ -207,6 +245,7 @@ export default function Feed() {
             <header className="page-header">
                 <div className="feed-header">
                     <h1>Clube das <span className="gradient-text">Musas</span></h1>
+                    <p className="feed-subtitle">Feed de resultados: compartilhe resultados e experiências e troque por pontos</p>
                 </div>
             </header>
 
@@ -226,36 +265,35 @@ export default function Feed() {
                         />
                     </div>
 
-                    {showImageInput && (
-                        <div className="image-input-container">
-                            <input
-                                type="url"
-                                placeholder="Cole a URL da imagem..."
-                                value={imageUrl}
-                                onChange={(e) => setImageUrl(e.target.value)}
-                            />
-                            {imageUrl && (
-                                <div className="image-preview">
-                                    <img src={imageUrl} alt="Preview" onError={() => setImageUrl('')} />
-                                    <button onClick={() => setImageUrl('')}>×</button>
-                                </div>
-                            )}
+                    {/* Preview da Imagem */}
+                    {imageUrl && (
+                        <div className="image-preview-container">
+                            <img src={imageUrl} alt="Preview" className="post-image-preview" />
+                            <button className="remove-image-btn" onClick={() => setImageUrl('')}>×</button>
                         </div>
                     )}
 
                     <div className="create-post-actions">
                         <div className="post-tools">
-                            <button
-                                className={`tool-btn ${showImageInput ? 'active' : ''}`}
-                                onClick={() => setShowImageInput(!showImageInput)}
-                                title="Adicionar imagem"
-                            >
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                                    <circle cx="8.5" cy="8.5" r="1.5" />
-                                    <polyline points="21,15 16,10 5,21" />
-                                </svg>
-                            </button>
+                            <label className={`tool-btn ${imageUrl ? 'active' : ''} ${uploading ? 'uploading' : ''}`}>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageUpload}
+                                    style={{ display: 'none' }}
+                                    disabled={uploading}
+                                />
+                                {uploading ? (
+                                    <span className="loading-spinner-small">⌛</span>
+                                ) : (
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                                        <circle cx="8.5" cy="8.5" r="1.5" />
+                                        <polyline points="21,15 16,10 5,21" />
+                                    </svg>
+                                )}
+                            </label>
+                            {/* Botão GIF removido ou mantido conforme desejo, vou manter mas só imagem funciona agora */}
                             <button className="tool-btn" title="GIF">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
                                     <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -298,16 +336,53 @@ export default function Feed() {
                                             <span className="post-user-name">{post.user?.name || 'Usuário'}</span>
                                             <span className="post-time">{formatTime(post.created_at)}</span>
                                         </div>
-                                        {isOwner ? (
-                                            <button className="post-more" onClick={() => handleDeletePost(post.id)}>
-                                                🗑️
-                                            </button>
-                                        ) : (
-                                            <button className="post-more">•••</button>
+
+                                        {(isOwner) && (
+                                            <div style={{ position: 'relative' }}>
+                                                <button
+                                                    className="post-more"
+                                                    onClick={() => setActiveMenuId(activeMenuId === post.id ? null : post.id)}
+                                                >
+                                                    •••
+                                                </button>
+                                                {activeMenuId === post.id && (
+                                                    <div className="post-menu-dropdown">
+                                                        {!post.image_url && (
+                                                            <button onClick={() => {
+                                                                setEditingPost({ id: post.id, content: post.content })
+                                                                setActiveMenuId(null)
+                                                            }} className="menu-item-btn">
+                                                                ✏️ Editar
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleDeletePost(post.id)}
+                                                            className="menu-item-btn delete"
+                                                        >
+                                                            🗑️ Excluir
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
                                         )}
                                     </div>
 
-                                    <p className="post-content">{post.content}</p>
+                                    {editingPost?.id === post.id ? (
+                                        <div className="edit-post-container">
+                                            <textarea
+                                                value={editingPost.content}
+                                                onChange={e => setEditingPost({ ...editingPost, content: e.target.value })}
+                                                className="edit-post-textarea"
+                                                rows={3}
+                                            />
+                                            <div className="edit-post-actions">
+                                                <button className="btn-cancel" onClick={() => setEditingPost(null)}>Cancelar</button>
+                                                <button className="btn-save" onClick={handleUpdatePost}>Salvar</button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <p className="post-content">{post.content}</p>
+                                    )}
 
                                     {post.image_url && (
                                         <div className="post-image">
@@ -339,78 +414,68 @@ export default function Feed() {
                                             </svg>
                                             <span>Comentar</span>
                                         </button>
-                                        <button
-                                            className="action-btn"
-                                            onClick={() => handleShare(post.content)}
-                                        >
-                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="18" height="18">
-                                                <circle cx="18" cy="5" r="3" />
-                                                <circle cx="6" cy="12" r="3" />
-                                                <circle cx="18" cy="19" r="3" />
-                                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
-                                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
-                                            </svg>
-                                            <span>Compartilhar</span>
-                                        </button>
+
                                     </div>
 
                                     {/* Seção de Comentários */}
-                                    {extras?.showComments && (
-                                        <div className="comments-section">
-                                            {extras.loadingComments ? (
-                                                <div className="loading-comments">Carregando...</div>
-                                            ) : (
-                                                <>
-                                                    <div className="comments-list">
-                                                        {extras.comments.length === 0 ? (
-                                                            <p className="no-comments">Seja o primeiro a comentar!</p>
-                                                        ) : (
-                                                            extras.comments.map(comment => (
-                                                                <div key={comment.id} className="comment-item">
-                                                                    <div
-                                                                        className="comment-avatar"
-                                                                        style={{ background: getAvatarColor(comment.user?.name || 'U') }}
-                                                                    >
-                                                                        {comment.user?.name?.charAt(0).toUpperCase() || 'U'}
+                                    {
+                                        extras?.showComments && (
+                                            <div className="comments-section">
+                                                {extras.loadingComments ? (
+                                                    <div className="loading-comments">Carregando...</div>
+                                                ) : (
+                                                    <>
+                                                        <div className="comments-list">
+                                                            {extras.comments.length === 0 ? (
+                                                                <p className="no-comments">Seja o primeiro a comentar!</p>
+                                                            ) : (
+                                                                extras.comments.map(comment => (
+                                                                    <div key={comment.id} className="comment-item">
+                                                                        <div
+                                                                            className="comment-avatar"
+                                                                            style={{ background: getAvatarColor(comment.user?.name || 'U') }}
+                                                                        >
+                                                                            {comment.user?.name?.charAt(0).toUpperCase() || 'U'}
+                                                                        </div>
+                                                                        <div className="comment-content">
+                                                                            <span className="comment-author">{comment.user?.name || 'Usuário'}</span>
+                                                                            <p>{comment.content}</p>
+                                                                            <span className="comment-time">{formatTime(comment.created_at)}</span>
+                                                                        </div>
                                                                     </div>
-                                                                    <div className="comment-content">
-                                                                        <span className="comment-author">{comment.user?.name || 'Usuário'}</span>
-                                                                        <p>{comment.content}</p>
-                                                                        <span className="comment-time">{formatTime(comment.created_at)}</span>
-                                                                    </div>
-                                                                </div>
-                                                            ))
-                                                        )}
-                                                    </div>
+                                                                ))
+                                                            )}
+                                                        </div>
 
-                                                    <div className="add-comment">
-                                                        <input
-                                                            type="text"
-                                                            placeholder="Escreva um comentário..."
-                                                            value={extras.newComment || ''}
-                                                            onChange={(e) => setPostExtras(prev => ({
-                                                                ...prev,
-                                                                [post.id]: { ...prev[post.id], newComment: e.target.value }
-                                                            }))}
-                                                            onKeyPress={(e) => e.key === 'Enter' && handleAddComment(post.id)}
-                                                        />
-                                                        <button
-                                                            onClick={() => handleAddComment(post.id)}
-                                                            disabled={!extras.newComment?.trim()}
-                                                        >
-                                                            ➤
-                                                        </button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    )}
+                                                        <div className="add-comment">
+                                                            <input
+                                                                type="text"
+                                                                placeholder="Escreva um comentário..."
+                                                                value={extras.newComment || ''}
+                                                                onChange={(e) => setPostExtras(prev => ({
+                                                                    ...prev,
+                                                                    [post.id]: { ...prev[post.id], newComment: e.target.value }
+                                                                }))}
+                                                                onKeyPress={(e) => e.key === 'Enter' && handleAddComment(post.id)}
+                                                            />
+                                                            <button
+                                                                onClick={() => handleAddComment(post.id)}
+                                                                disabled={!extras.newComment?.trim()}
+                                                            >
+                                                                ➤
+                                                            </button>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        )
+                                    }
                                 </article>
                             )
                         })}
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }
