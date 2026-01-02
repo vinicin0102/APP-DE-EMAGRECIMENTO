@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useWeightLogs } from '../hooks/useWeightLogs'
+import { supabase } from '../lib/supabase'
 import './ProfilePage.css'
 
 export default function ProfilePage() {
@@ -12,21 +13,66 @@ export default function ProfilePage() {
     const [editing, setEditing] = useState(false)
     const [name, setName] = useState(profile?.name || '')
     const [weightGoal, setWeightGoal] = useState(profile?.weight_goal?.toString() || '')
+    const [height, setHeight] = useState(profile?.height?.toString() || '') // em cm ou m? vamos usar MT (ex: 1.65)
+    const [birthDate, setBirthDate] = useState(profile?.birth_date || '')
+
     const [saving, setSaving] = useState(false)
+    const [uploadingAvatar, setUploadingAvatar] = useState(false)
+    const fileInputRef = useRef<HTMLInputElement>(null)
 
     // Modal de peso
     const [showWeightModal, setShowWeightModal] = useState(false)
     const [newWeight, setNewWeight] = useState('')
     const [addingWeight, setAddingWeight] = useState(false)
 
+    // Handler para Salvar Perfil
     const handleSave = async () => {
         setSaving(true)
-        await updateProfile({
-            name,
-            weight_goal: weightGoal ? parseFloat(weightGoal) : undefined
-        })
-        setSaving(false)
-        setEditing(false)
+        try {
+            await updateProfile({
+                name,
+                weight_goal: weightGoal ? parseFloat(weightGoal) : undefined,
+                height: height ? parseFloat(height) : undefined,
+                birth_date: birthDate || undefined
+            })
+            setEditing(false)
+        } catch (error) {
+            console.error('Erro ao salvar perfil:', error)
+            alert('Não foi possível salvar as alterações.')
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    // Handler para Upload de Avatar
+    const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        try {
+            setUploadingAvatar(true)
+            if (!event.target.files || event.target.files.length === 0) return
+
+            const file = event.target.files[0]
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${profile?.id}-${Date.now()}.${fileExt}`
+            const filePath = `${fileName}`
+
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file)
+
+            if (uploadError) throw uploadError
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(filePath)
+
+            await updateProfile({ avatar_url: publicUrl })
+
+        } catch (error) {
+            console.error('Erro no upload:', error)
+            alert('Erro ao atualizar foto. Verifique se executou o script SQL de atualização.')
+        } finally {
+            setUploadingAvatar(false)
+        }
     }
 
     const handleAddWeight = async () => {
@@ -43,6 +89,18 @@ export default function ProfilePage() {
         ? Math.round(((profile.current_weight - profile.weight_goal) / (profile.current_weight)) * 100)
         : 0
 
+    // Cálculo IMC
+    const imc = profile?.current_weight && profile?.height
+        ? (profile.current_weight / (profile.height * profile.height)).toFixed(1)
+        : null
+
+    const getImcStatus = (imcValue: number) => {
+        if (imcValue < 18.5) return 'Abaixo do peso'
+        if (imcValue < 24.9) return 'Peso normal'
+        if (imcValue < 29.9) return 'Sobrepeso'
+        return 'Obesidade'
+    }
+
     return (
         <div className="profile-page-container">
             <header className="page-header page-header-with-action">
@@ -55,15 +113,41 @@ export default function ProfilePage() {
             <div className="page-container">
                 {/* Profile Header */}
                 <div className="profile-header-card">
-                    <div className="profile-avatar-large">
-                        {profile?.name?.charAt(0).toUpperCase() || '?'}
+                    <div className="profile-avatar-container" onClick={() => fileInputRef.current?.click()}>
+                        {uploadingAvatar ? (
+                            <div className="avatar-loading">Wait...</div>
+                        ) : profile?.avatar_url ? (
+                            <img src={profile.avatar_url} alt="Profile" className="profile-avatar-img" />
+                        ) : (
+                            <div className="profile-avatar-large">
+                                {profile?.name?.charAt(0).toUpperCase() || '?'}
+                            </div>
+                        )}
+                        <div className="avatar-edit-icon">📷</div>
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleAvatarUpload}
+                            accept="image/*"
+                            style={{ display: 'none' }}
+                        />
                     </div>
+
                     <h2>{profile?.name || 'Usuário'}</h2>
-                    <p>{profile?.email}</p>
+                    <p className="profile-email-text">{profile?.email}</p>
+
                     <div className="profile-badges-row">
-                        <span className="badge-pill">{profile?.streak_days || 0} dias de sequência</span>
-                        <span className="badge-pill">{profile?.points || 0} pontos</span>
+                        <span className="badge-pill">🔥 {profile?.streak_days || 0} dias</span>
+                        <span className="badge-pill">💎 {profile?.points || 0} pts</span>
                     </div>
+
+                    {profile?.height && profile?.birth_date && (
+                        <div className="profile-mini-stats">
+                            <span>{profile.height}m</span>
+                            <span className="separator">•</span>
+                            <span>{Math.floor((new Date().getTime() - new Date(profile.birth_date).getTime()) / 31557600000)} anos</span>
+                        </div>
+                    )}
                 </div>
 
                 {/* Section Tabs */}
@@ -84,7 +168,7 @@ export default function ProfilePage() {
                         className={`section-tab ${activeSection === 'settings' ? 'active' : ''}`}
                         onClick={() => setActiveSection('settings')}
                     >
-                        Configurações
+                        Dados
                     </button>
                 </div>
 
@@ -126,6 +210,22 @@ export default function ProfilePage() {
                                     </span>
                                 </div>
                             </div>
+
+                            {imc && (
+                                <div className="stat-card-profile">
+                                    <div className="stat-icon-svg-profile">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                            <circle cx="12" cy="7" r="4"></circle>
+                                        </svg>
+                                    </div>
+                                    <div className="stat-content-profile">
+                                        <span className="stat-label-profile">IMC</span>
+                                        <span className="stat-value-profile">{imc}</span>
+                                        <span className="stat-sub">{getImcStatus(parseFloat(imc))}</span>
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {profile?.current_weight && profile?.weight_goal && (
@@ -143,24 +243,21 @@ export default function ProfilePage() {
                             </div>
                         )}
 
+                        {/* Achievements - Placeholder for now */}
                         <div className="achievements-card">
                             <h3>Conquistas</h3>
                             <div className="achievements-grid">
                                 <div className="achievement">
-                                    <div className="achievement-icon unlocked"></div>
-                                    <span>Primeira Semana</span>
+                                    <div className="achievement-icon unlocked">🏆</div>
+                                    <span>Bem-vinda</span>
                                 </div>
                                 <div className="achievement">
-                                    <div className="achievement-icon unlocked"></div>
-                                    <span>10 Desafios</span>
+                                    <div className="achievement-icon unlocked">⚖️</div>
+                                    <span>Primeiro Peso</span>
                                 </div>
                                 <div className="achievement locked">
-                                    <div className="achievement-icon"></div>
+                                    <div className="achievement-icon">🎯</div>
                                     <span>Meta Atingida</span>
-                                </div>
-                                <div className="achievement locked">
-                                    <div className="achievement-icon"></div>
-                                    <span>30 Dias</span>
                                 </div>
                             </div>
                         </div>
@@ -199,7 +296,7 @@ export default function ProfilePage() {
                             </div>
                         ) : (
                             <div className="empty-state">
-                                <div className="empty-icon"></div>
+                                <div className="empty-icon">⚖️</div>
                                 <p>Nenhum registro de peso ainda</p>
                                 <p className="empty-hint">Registre seu peso para acompanhar sua evolução</p>
                             </div>
@@ -224,13 +321,33 @@ export default function ProfilePage() {
                                             placeholder="Seu nome"
                                         />
                                     </div>
+                                    <div className="form-row">
+                                        <div className="form-group half">
+                                            <label>Altura (metros)</label>
+                                            <input
+                                                type="number"
+                                                step="0.01"
+                                                value={height}
+                                                onChange={e => setHeight(e.target.value)}
+                                                placeholder="Ex: 1.65"
+                                            />
+                                        </div>
+                                        <div className="form-group half">
+                                            <label>Meta Peso (kg)</label>
+                                            <input
+                                                type="number"
+                                                value={weightGoal}
+                                                onChange={e => setWeightGoal(e.target.value)}
+                                                placeholder="Ex: 65"
+                                            />
+                                        </div>
+                                    </div>
                                     <div className="form-group">
-                                        <label>Meta de Peso (kg)</label>
+                                        <label>Data de Nascimento</label>
                                         <input
-                                            type="number"
-                                            value={weightGoal}
-                                            onChange={e => setWeightGoal(e.target.value)}
-                                            placeholder="Ex: 65"
+                                            type="date"
+                                            value={birthDate}
+                                            onChange={e => setBirthDate(e.target.value)}
                                         />
                                     </div>
                                     <div className="form-actions">
@@ -251,8 +368,16 @@ export default function ProfilePage() {
                                         <span>{profile?.email || '--'}</span>
                                     </div>
                                     <div className="info-row">
+                                        <span>Altura</span>
+                                        <span>{profile?.height ? `${profile.height}m` : '--'}</span>
+                                    </div>
+                                    <div className="info-row">
                                         <span>Meta de peso</span>
                                         <span>{profile?.weight_goal ? `${profile.weight_goal} kg` : '--'}</span>
+                                    </div>
+                                    <div className="info-row">
+                                        <span>Nascimento</span>
+                                        <span>{profile?.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : '--'}</span>
                                     </div>
                                     <button className="btn-edit-settings" onClick={() => setEditing(true)}>
                                         Editar Informações
@@ -262,24 +387,11 @@ export default function ProfilePage() {
                         </div>
 
                         <div className="settings-card">
-                            <h3>Notificações</h3>
-                            <div className="toggle-row">
-                                <span>Lembretes diários</span>
-                                <div className="toggle active"></div>
-                            </div>
-                            <div className="toggle-row">
-                                <span>Novos desafios</span>
-                                <div className="toggle active"></div>
-                            </div>
-                            <div className="toggle-row">
-                                <span>Mensagens da comunidade</span>
-                                <div className="toggle"></div>
-                            </div>
+                            <h3>Conta</h3>
+                            <button className="btn-signout" onClick={signOut}>
+                                Sair da conta
+                            </button>
                         </div>
-
-                        <button className="btn-signout" onClick={signOut}>
-                            Sair da conta
-                        </button>
                     </div>
                 )}
             </div>

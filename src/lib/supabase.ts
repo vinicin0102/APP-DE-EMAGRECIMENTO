@@ -15,6 +15,8 @@ export interface User {
     current_weight?: number
     points: number
     streak_days: number
+    height?: number
+    birth_date?: string
     created_at: string
     updated_at: string
 }
