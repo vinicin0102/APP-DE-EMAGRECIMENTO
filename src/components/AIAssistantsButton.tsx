@@ -12,8 +12,6 @@ type ExpertConfig = {
     role: string
     avatar: string
     greeting: string
-    keywords: Record<string, string>
-    defaultResponse: string
 }
 
 const EXPERTS: Record<string, ExpertConfig> = {
@@ -22,38 +20,76 @@ const EXPERTS: Record<string, ExpertConfig> = {
         role: 'Personal Trainer',
         avatar: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=100&q=80',
         greeting: 'Oi musa! 💪 Sou a Camila, sua personal. Vamos botar esse corpo pra mexer? Me conte seu objetivo ou peça um treino rápido!',
-        keywords: {
-            treino: 'Para hoje, sugiro um HIIT de 20 minutos! 🔥\n30s Polichinelos\n30s Agachamento\n30s Abdominal\nRepita 4x sem descanso!',
-            perna: 'Quer pernas torneadas? Agachamento sumô e Afundo são essenciais. Faça 3 séries de 15 repetições bem concentradas!',
-            barriga: 'Para secar a barriga, foque na alimentação e faça prancha isométrica. Tente segurar 1 minuto hoje?',
-            iniciante: 'Comece devagar! Caminhada acelerada de 30min e exercícios com o peso do corpo são ótimos para começar.'
-        },
-        defaultResponse: 'Adorei a energia! 🔥 Para te ajudar melhor com seu treino, me diga se você quer focar em pernas, braços, cardio ou se precisa de algo rápido para fazer em casa!'
     },
     'Dr Jessica': {
         name: 'Dr Jessica',
         role: 'Nutricionista',
         avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=100&q=80',
         greeting: 'Olá querida! 🥗 Sou a Jessica. Estou aqui para te ajudar a comer bem sem sofrimento. Tem dúvida sobre algum alimento ou quer uma receita?',
-        keywords: {
-            receita: 'Que tal uma panqueca de banana fit? 🍌\n1 banana amassada\n2 ovos\nCanela a gosto\nMisture e frite com um fio de óleo de coco. Delícia!',
-            doce: 'Vontade de doce? Tente chocolate 70% cacau ou frutas vermelhas congeladas. Ajuda muito na ansiedade!',
-            jantar: 'À noite prefira proteínas leves e saladas. Um omelete com espinafre ou frango grelhado com legumes são ótimos.',
-            jejum: 'O jejum 16h é ótimo para desinflamar. Jante às 20h e volte a comer ao meio-dia. Beba muita água nesse período!'
-        },
-        defaultResponse: 'Entendi! Lembre-se que o equilíbrio é tudo. 🍎 Se quiser dicas específicas sobre café da manhã, almoço, jantar ou lanches fit, é só pedir!'
+    }
+}
+
+const SYSTEM_PROMPTS = {
+    'Dr Camila': `Você é a Dr. Camila, uma Personal Trainer especializada em mulheres e mães. 
+    Você é extremamente motivadora, usa emojis de força (💪, 🔥, 🏋️‍♀️) e fala de forma enérgica e próxima. 
+    Seu objetivo é ajudar com treinos rápidos (HIIT), dicas de musculação e motivação para quem tem pouco tempo.
+    Sempre reforce a autoestima e a importância de cuidar do corpo. Dê respostas concisas mas completas.
+    Não prescreva dietas detalhadas, de dicas gerais ou sugira falar com a Nutricionista.`,
+
+    'Dr Jessica': `Você é a Dr. Jessica, uma Nutricionista especializada em emagrecimento saudável e reeducação alimentar.
+    Você é doce, acolhedora e usa emojis de comida (🥗, 🍎, 🥑). 
+    Você é contra dietas restritivas malucas. Você ensina a comer com equilíbrio. 
+    Dê dicas de receitas práticas, substituições saudáveis e controle de ansiedade. Dê respostas concisas mas acolhedoras.
+    Não prescreva treinos detalhados, sugira falar com a Personal.`
+}
+
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY
+
+async function fetchOpenAIResponse(messages: Message[], expert: string) {
+    if (!OPENAI_API_KEY) {
+        return "Erro: Chave de API não configurada. Verifique o arquivo .env.local"
+    }
+
+    try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${OPENAI_API_KEY}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-3.5-turbo',
+                messages: [
+                    { role: 'system', content: SYSTEM_PROMPTS[expert as keyof typeof SYSTEM_PROMPTS] },
+                    ...messages.map(m => ({ role: m.role, content: m.content }))
+                ],
+                temperature: 0.7,
+                max_tokens: 400
+            })
+        })
+
+        const data = await response.json()
+
+        if (data.error) {
+            console.error('OpenAI Error:', data.error)
+            throw new Error(data.error.message || 'Erro na API')
+        }
+
+        return data.choices?.[0]?.message?.content || "Desculpe, não consegui formular uma resposta."
+    } catch (error) {
+        console.error('Erro OpenAI:', error)
+        return "Desculpe musa, tive um problema de conexão. Tente novamente! 😓"
     }
 }
 
 export default function AIAssistantsButton() {
-    const [isOpen, setIsOpen] = useState(true) // Começa aberto como na imagem? Ou fechado? Vou deixar true para chamar atenção
+    const [isOpen, setIsOpen] = useState(true)
     const [activeChat, setActiveChat] = useState<string | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [inputValue, setInputValue] = useState('')
     const [isTyping, setIsTyping] = useState(false)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    // Efeito para rolar chat
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }, [messages, isTyping])
@@ -68,8 +104,8 @@ export default function AIAssistantsButton() {
         setIsOpen(false)
     }
 
-    const handleSendMessage = () => {
-        if (!inputValue.trim() || !activeChat) return
+    const handleSendMessage = async () => {
+        if (!inputValue.trim() || !activeChat || isTyping) return
 
         const userMsg: Message = {
             id: Date.now().toString(),
@@ -77,35 +113,24 @@ export default function AIAssistantsButton() {
             content: inputValue
         }
 
-        setMessages(prev => [...prev, userMsg])
+        const newMessages = [...messages, userMsg]
+        setMessages(newMessages)
         setInputValue('')
         setIsTyping(true)
 
-        // Simular resposta
-        setTimeout(() => {
-            const expert = EXPERTS[activeChat]
-            const lowerInput = userMsg.content.toLowerCase()
-            let response = expert.defaultResponse
+        // Chamada real OpenAI
+        const responseContent = await fetchOpenAIResponse(newMessages.filter(m => m.id !== 'init'), activeChat)
 
-            // Busca keyword simples
-            for (const key in expert.keywords) {
-                if (lowerInput.includes(key)) {
-                    response = expert.keywords[key]
-                    break
-                }
-            }
+        const aiMsg: Message = {
+            id: (Date.now() + 1).toString(),
+            role: 'assistant',
+            content: responseContent
+        }
 
-            const aiMsg: Message = {
-                id: (Date.now() + 1).toString(),
-                role: 'assistant',
-                content: response
-            }
-            setMessages(prev => [...prev, aiMsg])
-            setIsTyping(false)
-        }, 1500)
+        setMessages(prev => [...prev, aiMsg])
+        setIsTyping(false)
     }
 
-    // Se estiver no chat, renderiza o modal
     if (activeChat) {
         const expert = EXPERTS[activeChat]
         return (
@@ -146,8 +171,14 @@ export default function AIAssistantsButton() {
                             onChange={e => setInputValue(e.target.value)}
                             onKeyPress={e => e.key === 'Enter' && handleSendMessage()}
                             autoFocus
+                            disabled={isTyping}
                         />
-                        <button className="chat-send-btn" onClick={handleSendMessage}>
+                        <button
+                            className="chat-send-btn"
+                            onClick={handleSendMessage}
+                            disabled={!inputValue.trim() || isTyping}
+                            style={{ opacity: (!inputValue.trim() || isTyping) ? 0.5 : 1 }}
+                        >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" width="20" height="20">
                                 <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
                             </svg>
