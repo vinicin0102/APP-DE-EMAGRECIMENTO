@@ -148,29 +148,32 @@ export default function AdminPanel() {
     // if (!isAdmin) { ... } removed for debugging/usability
 
     useEffect(() => {
-        if (isAdmin) {
-            fetchData()
-            // Carregar dados do localStorage
-            const savedSettings = localStorage.getItem('appSettings')
-            if (savedSettings) setSettings(JSON.parse(savedSettings))
-            const savedModules = localStorage.getItem('adminModules')
-            if (savedModules) setModules(JSON.parse(savedModules))
-            const savedAI = localStorage.getItem('adminAIResponses')
-            if (savedAI) setAiResponses(JSON.parse(savedAI))
-        }
-    }, [isAdmin])
+        fetchData()
+        // Carregar dados do localStorage
+        const savedSettings = localStorage.getItem('appSettings')
+        if (savedSettings) setSettings(JSON.parse(savedSettings))
+        const savedModules = localStorage.getItem('adminModules')
+        if (savedModules) setModules(JSON.parse(savedModules))
+        const savedAI = localStorage.getItem('adminAIResponses')
+        if (savedAI) setAiResponses(JSON.parse(savedAI))
+    }, [])
 
     const fetchData = async () => {
-        setLoading(true)
-        const [usersRes, postsRes, challengesRes] = await Promise.all([
-            supabase.from('users').select('*').order('created_at', { ascending: false }),
-            supabase.from('posts').select('*, user:users(*)').order('created_at', { ascending: false }),
-            supabase.from('challenges').select('*').order('created_at', { ascending: false })
-        ])
-        setUsers(usersRes.data || [])
-        setPosts(postsRes.data || [])
-        setChallenges(challengesRes.data || [])
-        setLoading(false)
+        try {
+            setLoading(true)
+            const [usersRes, postsRes, challengesRes] = await Promise.all([
+                supabase.from('users').select('*').order('created_at', { ascending: false }),
+                supabase.from('posts').select('*, user:users(*)').order('created_at', { ascending: false }),
+                supabase.from('challenges').select('*').order('created_at', { ascending: false })
+            ])
+            setUsers(usersRes.data || [])
+            setPosts(postsRes.data || [])
+            setChallenges(challengesRes.data || [])
+        } catch (error) {
+            console.error('Erro ao carregar dados do Admin:', error)
+        } finally {
+            setLoading(false)
+        }
     }
 
     const addLog = (action: string, userName: string = 'Admin') => {
