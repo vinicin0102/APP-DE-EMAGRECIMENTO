@@ -17,6 +17,7 @@ DROP POLICY IF EXISTS "Public Access Avatars" ON storage.objects;
 DROP POLICY IF EXISTS "Auth Upload Avatars" ON storage.objects;
 DROP POLICY IF EXISTS "Auth Update Avatars" ON storage.objects;
 DROP POLICY IF EXISTS "Auth Delete Avatars" ON storage.objects;
+DROP POLICY IF EXISTS "Auth Full Access Avatars" ON storage.objects;
 
 -- 4. Criação de novas políticas permissivas
 -- Leitura: Qualquer pessoa pode ver a foto
