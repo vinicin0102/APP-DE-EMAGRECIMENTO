@@ -92,7 +92,7 @@ const defaultAIResponses: AIResponse[] = [
 ]
 
 export default function AdminPanel() {
-    const { profile } = useAuth()
+    const { user, profile } = useAuth()
     const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'posts' | 'challenges' | 'modules' | 'ai' | 'settings' | 'logs' | 'payments'>('dashboard')
     const [users, setUsers] = useState<User[]>([])
     const [posts, setPosts] = useState<(Post & { user?: User })[]>([])
@@ -133,10 +133,13 @@ export default function AdminPanel() {
     const [aiForm, setAiForm] = useState({ keyword: '', response: '' })
     const [userForm, setUserForm] = useState({ name: '', points: 0, streak_days: 0, weight_goal: 0 })
 
-    const isAdmin = profile?.email && ADMIN_EMAILS.some(email => email.toLowerCase() === profile.email?.toLowerCase().trim())
+    const currentEmail = user?.email || profile?.email
+    const isAdmin = currentEmail && ADMIN_EMAILS.some(email => email.toLowerCase() === currentEmail.toLowerCase().trim())
 
     console.log('Admin Check:', {
-        currentEmail: profile?.email,
+        authEmail: user?.email,
+        profileEmail: profile?.email,
+        finalDetectedEmail: currentEmail,
         allowedEmails: ADMIN_EMAILS,
         isAdmin
     })
@@ -146,15 +149,15 @@ export default function AdminPanel() {
             <div style={{ padding: '40px', color: 'white', textAlign: 'center', background: '#0a0a0a', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <h1 style={{ color: '#ff4081', marginBottom: '20px' }}>🚫 Acesso Restrito (Modo Debug)</h1>
                 <div style={{ background: '#1a1a1a', padding: '30px', borderRadius: '16px', maxWidth: '500px', width: '100%', border: '1px solid #333', textAlign: 'left' }}>
-                    <p style={{ marginBottom: '10px', color: '#888' }}>Usuário Logado:</p>
+                    <p style={{ marginBottom: '10px', color: '#888' }}>Usuário Logado (Detectado):</p>
                     <div style={{ fontSize: '1.2em', fontWeight: 'bold', marginBottom: '20px', color: 'white', background: '#000', padding: '10px', borderRadius: '8px', border: '1px solid #444' }}>
-                        {profile?.email || 'Nenhum usuário logado'}
+                        {currentEmail || 'Nenhum usuário logado (Contexto Auth e Profile vazios)'}
                     </div>
 
                     <p style={{ marginBottom: '10px', color: '#888' }}>Lista de E-mails Permitidos:</p>
                     <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                         {ADMIN_EMAILS.map(email => {
-                            const isMatch = email.toLowerCase() === profile?.email?.toLowerCase().trim()
+                            const isMatch = email.toLowerCase() === currentEmail?.toLowerCase().trim()
                             return (
                                 <li key={email} style={{
                                     padding: '8px 12px',
@@ -175,8 +178,8 @@ export default function AdminPanel() {
 
                     <div style={{ marginTop: '25px', padding: '15px', background: 'rgba(255, 152, 0, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 152, 0, 0.2)' }}>
                         <p style={{ color: '#ff9800', fontSize: '0.9em', margin: 0 }}>
-                            <strong>Diagnóstico:</strong> Seu e-mail atual não está na lista de administradores no código `ADMIN_EMAILS`.
-                            Se você é admin, peça para adicionar seu e-mail exato na lista.
+                            <strong>Diagnóstico:</strong> O sistema identificou seu e-mail como acima. Se estiver correto e na lista, deve funcionar.
+                            Se aparecer "Nenhum usuário logado", tente deslogar e logar novamente no app.
                         </p>
                     </div>
                 </div>
