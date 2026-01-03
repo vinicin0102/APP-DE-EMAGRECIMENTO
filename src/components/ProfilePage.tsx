@@ -47,41 +47,56 @@ export default function ProfilePage() {
     // Handler para Upload de Avatar
     const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         try {
-            setUploadingAvatar(true)
             if (!event.target.files || event.target.files.length === 0) return
 
             const file = event.target.files[0]
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${profile?.id}-${Date.now()}.${fileExt}`
-            const filePath = `${fileName}`
 
-            console.log('Iniciando upload para:', filePath)
-
-            const { error: uploadError } = await supabase.storage
-                .from('avatars')
-                .upload(filePath, file, { upsert: true })
-
-            if (uploadError) {
-                console.error('Erro detalhado no Storage:', uploadError)
-                throw uploadError
+            // Validação de tamanho (Max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('A imagem é muito grande! Use uma menor que 5MB.')
+                return
             }
 
-            console.log('Upload concluído, obtendo URL pública...')
+            setUploadingAvatar(true)
+
+            const fileExt = file.name.split('.').pop()
+            // Nome único sempre para evitar conflito de overwrite
+            const fileName = `${profile?.id}_${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`
+            const filePath = `${fileName}`
+
+            console.log('Iniciando upload seguro para:', filePath)
+
+            // Upload simples sem upsert (Insert Only)
+            const { error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(filePath, file)
+
+            if (uploadError) {
+                console.error('Erro Storage:', uploadError)
+                throw new Error(`Falha no envio: ${uploadError.message}`)
+            }
+
             const { data: { publicUrl } } = supabase.storage
                 .from('avatars')
                 .getPublicUrl(filePath)
 
-            console.log('URL Pública:', publicUrl)
-            console.log('Atualizando perfil no banco...')
+            console.log('URL gerada:', publicUrl)
 
-            await updateProfile({ avatar_url: publicUrl })
-            console.log('Perfil atualizado com sucesso!')
+            // Atualiza perfil e apaga referência antiga
+            const { error: dbError } = await updateProfile({ avatar_url: publicUrl })
+
+            if (dbError) throw new Error(`Falha ao salvar no perfil: ${dbError.message}`)
+
+            // Força recarregamento visual limpando cache simples do navegador alterando state se necessario
+            alert('Foto atualizada com sucesso! 📸')
 
         } catch (error: any) {
-            console.error('Erro Completo no Upload:', error)
-            alert(`Erro ao atualizar foto: ${error.message || error.error_description || 'Erro desconhecido'}`)
+            console.error('Erro Upload:', error)
+            alert(`Erro: ${error.message || 'Falha desconhecida'}`)
         } finally {
             setUploadingAvatar(false)
+            // Limpa o input para permitir selecionar a mesma foto se falhar
+            if (fileInputRef.current) fileInputRef.current.value = ''
         }
     }
 
