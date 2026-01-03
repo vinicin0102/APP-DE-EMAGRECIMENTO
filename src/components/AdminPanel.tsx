@@ -100,7 +100,7 @@ export default function AdminPanel() {
     const [modules, setModules] = useState<Module[]>(defaultModules)
     const [settings, setSettings] = useState<AppSettings>(defaultSettings)
     const [aiResponses, setAiResponses] = useState<AIResponse[]>(defaultAIResponses)
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
     const [searchTerm, setSearchTerm] = useState('')
     const [activityLogs, setActivityLogs] = useState<{ action: string, user: string, time: Date }[]>([])
 
