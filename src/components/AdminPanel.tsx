@@ -141,6 +141,49 @@ export default function AdminPanel() {
         isAdmin
     })
 
+    if (!isAdmin) {
+        return (
+            <div style={{ padding: '40px', color: 'white', textAlign: 'center', background: '#0a0a0a', minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <h1 style={{ color: '#ff4081', marginBottom: '20px' }}>🚫 Acesso Restrito (Modo Debug)</h1>
+                <div style={{ background: '#1a1a1a', padding: '30px', borderRadius: '16px', maxWidth: '500px', width: '100%', border: '1px solid #333', textAlign: 'left' }}>
+                    <p style={{ marginBottom: '10px', color: '#888' }}>Usuário Logado:</p>
+                    <div style={{ fontSize: '1.2em', fontWeight: 'bold', marginBottom: '20px', color: 'white', background: '#000', padding: '10px', borderRadius: '8px', border: '1px solid #444' }}>
+                        {profile?.email || 'Nenhum usuário logado'}
+                    </div>
+
+                    <p style={{ marginBottom: '10px', color: '#888' }}>Lista de E-mails Permitidos:</p>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                        {ADMIN_EMAILS.map(email => {
+                            const isMatch = email.toLowerCase() === profile?.email?.toLowerCase().trim()
+                            return (
+                                <li key={email} style={{
+                                    padding: '8px 12px',
+                                    marginBottom: '5px',
+                                    borderRadius: '6px',
+                                    background: isMatch ? 'rgba(0, 200, 83, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                                    color: isMatch ? '#00C853' : '#aaa',
+                                    border: isMatch ? '1px solid #00C853' : '1px solid transparent',
+                                    display: 'flex',
+                                    justifyContent: 'space-between'
+                                }}>
+                                    <span>{email}</span>
+                                    <span>{isMatch ? '✅' : '❌'}</span>
+                                </li>
+                            )
+                        })}
+                    </ul>
+
+                    <div style={{ marginTop: '25px', padding: '15px', background: 'rgba(255, 152, 0, 0.1)', borderRadius: '8px', border: '1px solid rgba(255, 152, 0, 0.2)' }}>
+                        <p style={{ color: '#ff9800', fontSize: '0.9em', margin: 0 }}>
+                            <strong>Diagnóstico:</strong> Seu e-mail atual não está na lista de administradores no código `ADMIN_EMAILS`.
+                            Se você é admin, peça para adicionar seu e-mail exato na lista.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
     useEffect(() => {
         if (isAdmin) {
             fetchData()
