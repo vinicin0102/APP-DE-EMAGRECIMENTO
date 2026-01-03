@@ -147,17 +147,6 @@ export default function AdminPanel() {
     // Acesso liberado (verificação feita no App.tsx)
     // if (!isAdmin) { ... } removed for debugging/usability
 
-    useEffect(() => {
-        fetchData()
-        // Carregar dados do localStorage
-        const savedSettings = localStorage.getItem('appSettings')
-        if (savedSettings) setSettings(JSON.parse(savedSettings))
-        const savedModules = localStorage.getItem('adminModules')
-        if (savedModules) setModules(JSON.parse(savedModules))
-        const savedAI = localStorage.getItem('adminAIResponses')
-        if (savedAI) setAiResponses(JSON.parse(savedAI))
-    }, [])
-
     const fetchData = async () => {
         try {
             setLoading(true)
@@ -175,6 +164,24 @@ export default function AdminPanel() {
             setLoading(false)
         }
     }
+
+    useEffect(() => {
+        fetchData()
+        // Timeout de segurança: força loading false após 5 segundos
+        const timeout = setTimeout(() => {
+            setLoading(false)
+        }, 5000)
+
+        // Carregar dados do localStorage
+        const savedSettings = localStorage.getItem('appSettings')
+        if (savedSettings) setSettings(JSON.parse(savedSettings))
+        const savedModules = localStorage.getItem('adminModules')
+        if (savedModules) setModules(JSON.parse(savedModules))
+        const savedAI = localStorage.getItem('adminAIResponses')
+        if (savedAI) setAiResponses(JSON.parse(savedAI))
+
+        return () => clearTimeout(timeout)
+    }, [])
 
     const addLog = (action: string, userName: string = 'Admin') => {
         setActivityLogs(prev => [{ action, user: userName, time: new Date() }, ...prev.slice(0, 49)])
