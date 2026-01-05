@@ -318,3 +318,191 @@
 .plan-status-container.overdue .form-field input {
     background: #f5f5f5;
 }
+
+/* Workouts List */
+.workouts-list {
+    margin: 20px 0;
+    text-align: left;
+}
+
+.workout-day-card {
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 4px solid #FF1493;
+    transition: all 0.3s ease;
+}
+
+.workout-day-card.completed {
+    border-left-color: #00C9A7;
+    background: #f0fdf9;
+}
+
+.workout-day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.day-name {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.check-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    background: white;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.check-btn.checked {
+    background: #00C9A7;
+    border-color: #00C9A7;
+    color: white;
+}
+
+.workout-info {
+    cursor: pointer;
+}
+
+.workout-info h4 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.workout-meta {
+    display: flex;
+    gap: 12px;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.no-workouts {
+    text-align: center;
+    padding: 32px 16px;
+    color: #666;
+}
+
+.no-workouts p {
+    margin-bottom: 16px;
+}
+
+/* Workout Modal */
+.workout-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.workout-modal {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+}
+
+.workout-modal .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #f0f0f0;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 1.25rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.workout-modal h2 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    color: #1a1a2e;
+    padding-right: 40px;
+}
+
+.workout-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.workout-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.workout-details span {
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.workout-modal h3 {
+    font-size: 1rem;
+    color: #1a1a2e;
+    margin: 0 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.exercises-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.exercise-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.exercise-name {
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.exercise-sets {
+    color: #FF1493;
+    font-weight: 600;
+    font-size: 0.9rem;
+}

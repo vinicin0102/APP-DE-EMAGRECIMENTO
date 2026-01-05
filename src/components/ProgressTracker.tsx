@@ -15,13 +15,34 @@ interface PlanData {
     created_at?: string
 }
 
+interface Workout {
+    id: string
+    title: string
+    description: string
+    type: string
+    duration: string
+    difficulty: string
+    exercises: Array<{ nome: string; series: number; repeticoes: string }>
+}
+
+interface UserWorkout {
+    id: string
+    day_of_week: number
+    is_completed: boolean
+    workout: Workout
+}
+
+const DAYS_OF_WEEK = ['', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo']
+
 export default function ProgressTracker() {
     const { user } = useAuth()
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [planStatus, setPlanStatus] = useState<'none' | 'active' | 'overdue'>('none')
-    const [showForm, setShowForm] = useState(true) // Start with form visible
+    const [showForm, setShowForm] = useState(true)
     const [existingPlan, setExistingPlan] = useState<PlanData | null>(null)
+    const [userWorkouts, setUserWorkouts] = useState<UserWorkout[]>([])
+    const [selectedWorkout, setSelectedWorkout] = useState<Workout | null>(null)
     const isMounted = useRef(true)
 
     // Form fields
@@ -32,11 +53,8 @@ export default function ProgressTracker() {
 
     useEffect(() => {
         isMounted.current = true
-
-        // Safety timeout - force loading false after 3 seconds
         const timeout = setTimeout(() => {
             if (isMounted.current && loading) {
-                console.warn('ProgressTracker: Timeout atingido, forçando carregamento')
                 setLoading(false)
                 setShowForm(true)
             }
@@ -68,9 +86,7 @@ export default function ProgressTracker() {
 
             if (!isMounted.current) return
 
-            // Handle table not existing or other errors
             if (error) {
-                console.warn('Plano não encontrado ou tabela não existe:', error.message)
                 setPlanStatus('none')
                 setShowForm(true)
                 setLoading(false)
@@ -79,15 +95,17 @@ export default function ProgressTracker() {
 
             if (data) {
                 setExistingPlan(data)
-                // Check if plan is expired
                 const expiresAt = new Date(data.expires_at)
                 const now = new Date()
+
                 if (expiresAt < now) {
                     setPlanStatus('overdue')
                 } else {
                     setPlanStatus('active')
+                    // Carregar treinos do usuário
+                    await loadUserWorkouts()
                 }
-                // Pre-fill form with existing data
+
                 setPeso(data.peso?.toString() || '')
                 setMetaPeso(data.meta_peso?.toString() || '')
                 setLocalTreino(data.local_treino || '')
@@ -110,6 +128,33 @@ export default function ProgressTracker() {
         }
     }
 
+    const loadUserWorkouts = async () => {
+        if (!user) return
+
+        try {
+            const currentMonth = new Date()
+            currentMonth.setDate(1)
+            currentMonth.setHours(0, 0, 0, 0)
+
+            const { data, error } = await supabase
+                .from('user_workouts')
+                .select(`
+                    id,
+                    day_of_week,
+                    is_completed,
+                    workout:workouts(*)
+                `)
+                .eq('user_id', user.id)
+                .order('day_of_week', { ascending: true })
+
+            if (!error && data) {
+                setUserWorkouts(data as any)
+            }
+        } catch (err) {
+            console.error('Erro ao carregar treinos:', err)
+        }
+    }
+
     const handleSubmitPlan = async () => {
         if (!user) return
         if (!peso || !metaPeso || !localTreino || !altura) {
@@ -120,7 +165,6 @@ export default function ProgressTracker() {
         setSubmitting(true)
 
         try {
-            // Calculate expiration (30 days from now)
             const expiresAt = new Date()
             expiresAt.setDate(expiresAt.getDate() + 30)
 
@@ -135,22 +179,22 @@ export default function ProgressTracker() {
             }
 
             if (existingPlan?.id) {
-                // Update existing plan
                 await supabase
                     .from('individual_plans')
                     .update(planData)
                     .eq('id', existingPlan.id)
             } else {
-                // Create new plan
                 await supabase
                     .from('individual_plans')
                     .insert(planData)
             }
 
-            // Redirect to payment (you can customize this URL)
+            // Gerar treinos sorteados para o usuário
+            await generateWorkoutsForUser(localTreino)
+
+            // Redirecionar para pagamento
             window.open('https://pay.hotmart.com/SEU_LINK_HOTMART', '_blank')
 
-            // Refresh status
             await checkPlanStatus()
             setShowForm(false)
         } catch (err) {
@@ -161,8 +205,67 @@ export default function ProgressTracker() {
         }
     }
 
-    const handleRenewPlan = () => {
-        setShowForm(true)
+    const generateWorkoutsForUser = async (workoutType: string) => {
+        if (!user) return
+
+        try {
+            // Buscar treinos disponíveis do tipo escolhido
+            const { data: workouts } = await supabase
+                .from('workouts')
+                .select('id')
+                .or(`type.eq.${workoutType},type.eq.ambos`)
+                .eq('is_active', true)
+
+            if (!workouts || workouts.length === 0) {
+                console.warn('Nenhum treino disponível')
+                return
+            }
+
+            // Deletar treinos anteriores
+            await supabase
+                .from('user_workouts')
+                .delete()
+                .eq('user_id', user.id)
+
+            // Sortear e atribuir treinos para cada dia (Seg-Sáb)
+            const currentMonth = new Date()
+            currentMonth.setDate(1)
+            currentMonth.setHours(0, 0, 0, 0)
+
+            const assignments = []
+            for (let day = 1; day <= 6; day++) {
+                const randomIndex = Math.floor(Math.random() * workouts.length)
+                assignments.push({
+                    user_id: user.id,
+                    workout_id: workouts[randomIndex].id,
+                    day_of_week: day,
+                    plan_month: currentMonth.toISOString().split('T')[0]
+                })
+            }
+
+            await supabase.from('user_workouts').insert(assignments)
+            await loadUserWorkouts()
+        } catch (err) {
+            console.error('Erro ao gerar treinos:', err)
+        }
+    }
+
+    const toggleWorkoutComplete = async (workoutId: string, currentStatus: boolean) => {
+        try {
+            await supabase
+                .from('user_workouts')
+                .update({
+                    is_completed: !currentStatus,
+                    completed_at: !currentStatus ? new Date().toISOString() : null
+                })
+                .eq('id', workoutId)
+
+            setUserWorkouts(prev => prev.map(w =>
+                w.id === workoutId ? { ...w, is_completed: !currentStatus } : w
+            ))
+        } catch (err) {
+            console.error('Erro:', err)
+        }
     }
 
     if (loading) {
@@ -180,48 +283,71 @@ export default function ProgressTracker() {
         <div className="progress-tracker">
             {/* Header */}
             <div className="progress-header">
-                <h1>🎯 Meu Progresso</h1>
-                <p>Acompanhe sua evolução diária</p>
+                <h1>🎯 Meu Plano</h1>
+                <p>Seu plano individual de treinos</p>
             </div>
 
             {/* Plan Card */}
             <div className="plan-card">
-                {showForm && (
+                {showForm && planStatus !== 'none' && (
                     <button className="back-btn" onClick={() => setShowForm(false)}>
                         ←
                     </button>
                 )}
 
-                {/* Active Plan State */}
+                {/* Active Plan State - Mostrar Treinos */}
                 {planStatus === 'active' && !showForm && (
                     <div className="plan-status-container">
                         <div className="plan-active-badge">
                             <span className="badge-icon">✓</span>
                             <span>Plano Ativo</span>
                         </div>
-                        <h2 className="plan-title">Seu Plano Individual</h2>
+                        <h2 className="plan-title">Seus Treinos da Semana</h2>
                         <p className="plan-subtitle">
-                            Seu plano personalizado está ativo até {existingPlan?.expires_at ?
+                            Válido até {existingPlan?.expires_at ?
                                 new Date(existingPlan.expires_at).toLocaleDateString('pt-BR') : 'N/A'}
                         </p>
 
-                        <div className="plan-data-grid">
-                            <div className="plan-data-item">
-                                <span className="data-label">Peso Atual</span>
-                                <span className="data-value">{existingPlan?.peso} kg</span>
-                            </div>
-                            <div className="plan-data-item">
-                                <span className="data-label">Meta de Peso</span>
-                                <span className="data-value">{existingPlan?.meta_peso} kg</span>
-                            </div>
-                            <div className="plan-data-item">
-                                <span className="data-label">Local</span>
-                                <span className="data-value">{existingPlan?.local_treino}</span>
-                            </div>
-                            <div className="plan-data-item">
-                                <span className="data-label">Altura</span>
-                                <span className="data-value">{existingPlan?.altura} cm</span>
-                            </div>
+                        {/* Lista de Treinos por Dia */}
+                        <div className="workouts-list">
+                            {userWorkouts.length > 0 ? (
+                                userWorkouts.map((uw) => (
+                                    <div
+                                        key={uw.id}
+                                        className={`workout-day-card ${uw.is_completed ? 'completed' : ''}`}
+                                    >
+                                        <div className="workout-day-header">
+                                            <span className="day-name">{DAYS_OF_WEEK[uw.day_of_week]}</span>
+                                            <button
+                                                className={`check-btn ${uw.is_completed ? 'checked' : ''}`}
+                                                onClick={() => toggleWorkoutComplete(uw.id, uw.is_completed)}
+                                            >
+                                                {uw.is_completed ? '✓' : '○'}
+                                            </button>
+                                        </div>
+                                        <div
+                                            className="workout-info"
+                                            onClick={() => setSelectedWorkout(uw.workout)}
+                                        >
+                                            <h4>{uw.workout?.title || 'Treino'}</h4>
+                                            <div className="workout-meta">
+                                                <span>⏱ {uw.workout?.duration || '30 min'}</span>
+                                                <span>💪 {uw.workout?.difficulty || 'Médio'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="no-workouts">
+                                    <p>Nenhum treino atribuído ainda.</p>
+                                    <button
+                                        className="plan-btn secondary"
+                                        onClick={() => generateWorkoutsForUser(existingPlan?.local_treino || 'casa')}
+                                    >
+                                        Gerar Treinos
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         <button className="plan-btn secondary" onClick={() => setShowForm(true)}>
@@ -237,54 +363,7 @@ export default function ProgressTracker() {
                         <p className="plan-subtitle">
                             para gerar o seu plano do mês você precisa acertar o valor pendente
                         </p>
-
-                        <div className="plan-form">
-                            <div className="form-field">
-                                <label>Peso</label>
-                                <input
-                                    type="number"
-                                    value={peso}
-                                    onChange={(e) => setPeso(e.target.value)}
-                                    placeholder=""
-                                    disabled
-                                />
-                            </div>
-
-                            <div className="form-field">
-                                <label>Meta de peso</label>
-                                <input
-                                    type="number"
-                                    value={metaPeso}
-                                    onChange={(e) => setMetaPeso(e.target.value)}
-                                    placeholder=""
-                                    disabled
-                                />
-                            </div>
-
-                            <div className="form-field">
-                                <label>Treina em casa ou academia</label>
-                                <input
-                                    type="text"
-                                    value={localTreino}
-                                    onChange={(e) => setLocalTreino(e.target.value)}
-                                    placeholder=""
-                                    disabled
-                                />
-                            </div>
-
-                            <div className="form-field">
-                                <label>Altura</label>
-                                <input
-                                    type="number"
-                                    value={altura}
-                                    onChange={(e) => setAltura(e.target.value)}
-                                    placeholder=""
-                                    disabled
-                                />
-                            </div>
-                        </div>
-
-                        <button className="plan-btn renew" onClick={handleRenewPlan}>
+                        <button className="plan-btn renew" onClick={() => setShowForm(true)}>
                             Voltar com plano individual
                         </button>
                     </div>
@@ -295,12 +374,12 @@ export default function ProgressTracker() {
                     <div className="plan-form-container">
                         <h2 className="plan-title">Plano Individual</h2>
                         <p className="plan-subtitle">
-                            Tenha um plano individual de treino e aulas personalizadas para alcançar seus resultados - atualiza mensalmente
+                            Tenha um plano individual de treino personalizado - atualiza mensalmente
                         </p>
 
                         <div className="plan-form">
                             <div className="form-field">
-                                <label>Peso</label>
+                                <label>Peso (kg)</label>
                                 <input
                                     type="number"
                                     step="0.1"
@@ -311,7 +390,7 @@ export default function ProgressTracker() {
                             </div>
 
                             <div className="form-field">
-                                <label>Meta de peso</label>
+                                <label>Meta de peso (kg)</label>
                                 <input
                                     type="number"
                                     step="0.1"
@@ -322,7 +401,7 @@ export default function ProgressTracker() {
                             </div>
 
                             <div className="form-field">
-                                <label>Treina em casa ou academia</label>
+                                <label>Onde você treina?</label>
                                 <select
                                     value={localTreino}
                                     onChange={(e) => setLocalTreino(e.target.value)}
@@ -335,7 +414,7 @@ export default function ProgressTracker() {
                             </div>
 
                             <div className="form-field">
-                                <label>Altura</label>
+                                <label>Altura (cm)</label>
                                 <input
                                     type="number"
                                     value={altura}
@@ -350,11 +429,38 @@ export default function ProgressTracker() {
                             onClick={handleSubmitPlan}
                             disabled={submitting || !peso || !metaPeso || !localTreino || !altura}
                         >
-                            {submitting ? 'Processando...' : 'Quero meu plano individual por apenas 29,90'}
+                            {submitting ? 'Processando...' : 'Quero meu plano por R$ 29,90'}
                         </button>
                     </div>
                 )}
             </div>
+
+            {/* Modal de Detalhes do Treino */}
+            {selectedWorkout && (
+                <div className="workout-modal-overlay" onClick={() => setSelectedWorkout(null)}>
+                    <div className="workout-modal" onClick={e => e.stopPropagation()}>
+                        <button className="modal-close" onClick={() => setSelectedWorkout(null)}>×</button>
+                        <h2>{selectedWorkout.title}</h2>
+                        <p className="workout-description">{selectedWorkout.description}</p>
+
+                        <div className="workout-details">
+                            <span>⏱ {selectedWorkout.duration}</span>
+                            <span>💪 {selectedWorkout.difficulty}</span>
+                            <span>📍 {selectedWorkout.type === 'casa' ? 'Em casa' : selectedWorkout.type === 'academia' ? 'Academia' : 'Ambos'}</span>
+                        </div>
+
+                        <h3>Exercícios</h3>
+                        <div className="exercises-list">
+                            {selectedWorkout.exercises?.map((ex, idx) => (
+                                <div key={idx} className="exercise-item">
+                                    <span className="exercise-name">{ex.nome}</span>
+                                    <span className="exercise-sets">{ex.series}x {ex.repeticoes}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
