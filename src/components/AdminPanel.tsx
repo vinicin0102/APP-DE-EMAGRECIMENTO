@@ -47,6 +47,25 @@ interface AIResponse {
     response: string
 }
 
+interface WorkoutExercise {
+    nome: string
+    series: number
+    repeticoes: string
+}
+
+interface Workout {
+    id: string
+    title: string
+    description: string
+    type: 'casa' | 'academia' | 'ambos'
+    duration: string
+    difficulty: 'iniciante' | 'intermediario' | 'avancado'
+    exercises: WorkoutExercise[]
+    video_url?: string
+    thumbnail_url?: string
+    is_active: boolean
+}
+
 // Módulos padrão
 const defaultModules: Module[] = [
     {
@@ -93,7 +112,7 @@ const defaultAIResponses: AIResponse[] = [
 
 export default function AdminPanel() {
     const { user, profile } = useAuth()
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'posts' | 'challenges' | 'modules' | 'ai' | 'settings' | 'logs' | 'payments'>('dashboard')
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'posts' | 'challenges' | 'modules' | 'workouts' | 'ai' | 'settings' | 'logs' | 'payments'>('dashboard')
     const [users, setUsers] = useState<User[]>([])
     const [posts, setPosts] = useState<(Post & { user?: User })[]>([])
     const [challenges, setChallenges] = useState<Challenge[]>([])
@@ -106,7 +125,16 @@ export default function AdminPanel() {
 
     // Modal states
     const [showModal, setShowModal] = useState(false)
-    const [modalType, setModalType] = useState<'challenge' | 'module' | 'lesson' | 'ai' | 'user'>('challenge')
+    const [modalType, setModalType] = useState<'challenge' | 'module' | 'lesson' | 'ai' | 'user' | 'workout'>('challenge')
+    const [workouts, setWorkouts] = useState<Workout[]>([])
+    const [workoutForm, setWorkoutForm] = useState<{
+        title: string; description: string; type: 'casa' | 'academia' | 'ambos';
+        duration: string; difficulty: 'iniciante' | 'intermediario' | 'avancado';
+        exercises: WorkoutExercise[]; video_url: string; is_active: boolean;
+    }>({
+        title: '', description: '', type: 'casa', duration: '30 min',
+        difficulty: 'iniciante', exercises: [], video_url: '', is_active: true
+    })
     const [editingItem, setEditingItem] = useState<any>(null)
     const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null)
 
@@ -150,14 +178,16 @@ export default function AdminPanel() {
     const fetchData = async () => {
         try {
             setLoading(true)
-            const [usersRes, postsRes, challengesRes] = await Promise.all([
+            const [usersRes, postsRes, challengesRes, workoutsRes] = await Promise.all([
                 supabase.from('users').select('*').order('created_at', { ascending: false }),
                 supabase.from('posts').select('*, user:users(*)').order('created_at', { ascending: false }),
-                supabase.from('challenges').select('*').order('created_at', { ascending: false })
+                supabase.from('challenges').select('*').order('created_at', { ascending: false }),
+                supabase.from('workouts').select('*').order('created_at', { ascending: false })
             ])
             setUsers(usersRes.data || [])
             setPosts(postsRes.data || [])
             setChallenges(challengesRes.data || [])
+            setWorkouts(workoutsRes.data || [])
         } catch (error) {
             console.error('Erro ao carregar dados do Admin:', error)
         } finally {
@@ -558,6 +588,110 @@ export default function AdminPanel() {
         localStorage.setItem('adminAIResponses', JSON.stringify(newResponses))
     }
 
+    // Workout actions
+    const openWorkoutModal = (workout?: Workout) => {
+        if (workout) {
+            setEditingItem(workout)
+            setWorkoutForm({
+                title: workout.title,
+                description: workout.description || '',
+                type: workout.type,
+                duration: workout.duration,
+                difficulty: workout.difficulty,
+                exercises: workout.exercises || [],
+                video_url: workout.video_url || '',
+                is_active: workout.is_active
+            })
+        } else {
+            setEditingItem(null)
+            setWorkoutForm({
+                title: '', description: '', type: 'casa', duration: '30 min',
+                difficulty: 'iniciante', exercises: [], video_url: '', is_active: true
+            })
+        }
+        setModalType('workout')
+        setShowModal(true)
+    }
+
+    const saveWorkout = async () => {
+        if (!workoutForm.title.trim()) {
+            alert('O título é obrigatório!')
+            return
+        }
+
+        try {
+            if (editingItem) {
+                const { error } = await supabase.from('workouts').update({
+                    title: workoutForm.title,
+                    description: workoutForm.description,
+                    type: workoutForm.type,
+                    duration: workoutForm.duration,
+                    difficulty: workoutForm.difficulty,
+                    exercises: workoutForm.exercises,
+                    video_url: workoutForm.video_url || null,
+                    is_active: workoutForm.is_active
+                }).eq('id', editingItem.id)
+
+                if (error) throw error
+                addLog(`Editou treino: ${workoutForm.title}`)
+            } else {
+                const { error } = await supabase.from('workouts').insert({
+                    title: workoutForm.title,
+                    description: workoutForm.description,
+                    type: workoutForm.type,
+                    duration: workoutForm.duration,
+                    difficulty: workoutForm.difficulty,
+                    exercises: workoutForm.exercises,
+                    video_url: workoutForm.video_url || null,
+                    is_active: workoutForm.is_active
+                })
+
+                if (error) throw error
+                addLog(`Criou treino: ${workoutForm.title}`)
+            }
+            setShowModal(false)
+            await fetchData()
+            alert('Treino salvo com sucesso!')
+        } catch (err: any) {
+            console.error('Erro ao salvar treino:', err)
+            alert(`Erro: ${err.message}`)
+        }
+    }
+
+    const deleteWorkout = async (id: string, title: string) => {
+        if (!confirm(`Excluir treino "${title}"?`)) return
+        try {
+            await supabase.from('workouts').delete().eq('id', id)
+            addLog(`Excluiu treino: ${title}`)
+            await fetchData()
+        } catch (err) {
+            console.error('Erro ao excluir:', err)
+        }
+    }
+
+    const addExercise = () => {
+        setWorkoutForm(prev => ({
+            ...prev,
+            exercises: [...prev.exercises, { nome: '', series: 3, repeticoes: '12x' }]
+        }))
+    }
+
+    const updateExercise = (index: number, field: keyof WorkoutExercise, value: string | number) => {
+        setWorkoutForm(prev => ({
+            ...prev,
+            exercises: prev.exercises.map((ex, i) =>
+                i === index ? { ...ex, [field]: value } : ex
+            )
+        }))
+    }
+
+    const removeExercise = (index: number) => {
+        setWorkoutForm(prev => ({
+            ...prev,
+            exercises: prev.exercises.filter((_, i) => i !== index)
+        }))
+    }
+
     // Settings
     const saveSettings = () => {
         localStorage.setItem('appSettings', JSON.stringify(settings))
@@ -626,6 +760,7 @@ export default function AdminPanel() {
                     { id: 'posts', label: '📝 Posts' },
                     { id: 'challenges', label: '🏆 Desafios' },
                     { id: 'modules', label: '📚 Módulos/Aulas' },
+                    { id: 'workouts', label: '💪 Treinos' },
                     { id: 'ai', label: '🤖 IA' },
                     { id: 'settings', label: '⚙️ Config' },
                     { id: 'logs', label: '📋 Logs' },
@@ -970,6 +1105,62 @@ export default function AdminPanel() {
                             </div>
                         )}
 
+                        {/* Workouts */}
+                        {activeTab === 'workouts' && (
+                            <div className="section-admin">
+                                <div className="section-header-admin">
+                                    <h3>💪 Treinos do Plano Individual ({workouts.length})</h3>
+                                    <button className="btn-add" onClick={() => openWorkoutModal()}>+ Novo Treino</button>
+                                </div>
+                                <p className="section-hint">Cadastre treinos que serão sorteados para os planos individuais das usuárias</p>
+
+                                <div className="workouts-admin-list">
+                                    {workouts.length === 0 ? (
+                                        <div className="empty-state-admin">
+                                            <p>Nenhum treino cadastrado ainda.</p>
+                                            <button className="btn-add" onClick={() => openWorkoutModal()}>Criar Primeiro Treino</button>
+                                        </div>
+                                    ) : (
+                                        workouts.map(workout => (
+                                            <div key={workout.id} className={`workout-admin-card ${!workout.is_active ? 'inactive' : ''}`}>
+                                                <div className="workout-admin-header">
+                                                    <div className="workout-admin-title">
+                                                        <h4>{workout.title}</h4>
+                                                        <div className="workout-admin-badges">
+                                                            <span className={`badge type-${workout.type}`}>
+                                                                {workout.type === 'casa' ? '🏠 Casa' : workout.type === 'academia' ? '🏋️ Academia' : '🔄 Ambos'}
+                                                            </span>
+                                                            <span className={`badge difficulty-${workout.difficulty}`}>
+                                                                {workout.difficulty === 'iniciante' ? '🟢 Iniciante' : workout.difficulty === 'intermediario' ? '🟡 Intermediário' : '🔴 Avançado'}
+                                                            </span>
+                                                            <span className="badge duration">⏱ {workout.duration}</span>
+                                                            {!workout.is_active && <span className="badge inactive">❌ Inativo</span>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="workout-admin-actions">
+                                                        <button className="btn-icon edit" onClick={() => openWorkoutModal(workout)} title="Editar">✏️</button>
+                                                        <button className="btn-icon delete" onClick={() => deleteWorkout(workout.id, workout.title)} title="Excluir">🗑️</button>
+                                                    </div>
+                                                </div>
+                                                {workout.description && <p className="workout-admin-desc">{workout.description}</p>}
+                                                {workout.exercises && workout.exercises.length > 0 && (
+                                                    <div className="workout-admin-exercises">
+                                                        <strong>Exercícios ({workout.exercises.length}):</strong>
+                                                        <ul>
+                                                            {workout.exercises.slice(0, 3).map((ex, i) => (
+                                                                <li key={i}>{ex.nome} - {ex.series}x {ex.repeticoes}</li>
+                                                            ))}
+                                                            {workout.exercises.length > 3 && <li>... e mais {workout.exercises.length - 3}</li>}
+                                                        </ul>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
                         {/* AI */}
                         {activeTab === 'ai' && (
                             <div className="section-admin">
@@ -1289,6 +1480,115 @@ export default function AdminPanel() {
                                 </div>
                                 <div className="form-group"><label>Meta de Peso (kg)</label><input type="number" value={userForm.weight_goal} onChange={e => setUserForm({ ...userForm, weight_goal: parseFloat(e.target.value) || 0 })} /></div>
                                 <button className="btn-primary btn-save" onClick={saveUser}>💾 Salvar</button>
+                            </>
+                        )}
+
+                        {/* Workout Modal */}
+                        {modalType === 'workout' && (
+                            <>
+                                <h3>{editingItem ? '✏️ Editar Treino' : '🆕 Novo Treino'}</h3>
+                                <div className="form-group">
+                                    <label>Título do Treino*</label>
+                                    <input
+                                        value={workoutForm.title}
+                                        onChange={e => setWorkoutForm({ ...workoutForm, title: e.target.value })}
+                                        placeholder="Ex: Treino HIIT em Casa"
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label>Descrição</label>
+                                    <textarea
+                                        value={workoutForm.description}
+                                        onChange={e => setWorkoutForm({ ...workoutForm, description: e.target.value })}
+                                        rows={2}
+                                        placeholder="Breve descrição do treino..."
+                                    />
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Tipo</label>
+                                        <select value={workoutForm.type} onChange={e => setWorkoutForm({ ...workoutForm, type: e.target.value as any })}>
+                                            <option value="casa">🏠 Em Casa</option>
+                                            <option value="academia">🏋️ Academia</option>
+                                            <option value="ambos">🔄 Ambos</option>
+                                        </select>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Dificuldade</label>
+                                        <select value={workoutForm.difficulty} onChange={e => setWorkoutForm({ ...workoutForm, difficulty: e.target.value as any })}>
+                                            <option value="iniciante">🟢 Iniciante</option>
+                                            <option value="intermediario">🟡 Intermediário</option>
+                                            <option value="avancado">🔴 Avançado</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Duração</label>
+                                        <input
+                                            value={workoutForm.duration}
+                                            onChange={e => setWorkoutForm({ ...workoutForm, duration: e.target.value })}
+                                            placeholder="Ex: 30 min"
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>URL do Vídeo (opcional)</label>
+                                        <input
+                                            value={workoutForm.video_url}
+                                            onChange={e => setWorkoutForm({ ...workoutForm, video_url: e.target.value })}
+                                            placeholder="https://..."
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <div className="exercises-header">
+                                        <label>Exercícios</label>
+                                        <button type="button" className="btn-add-small" onClick={addExercise}>+ Adicionar</button>
+                                    </div>
+                                    {workoutForm.exercises.length === 0 ? (
+                                        <p className="no-exercises">Nenhum exercício adicionado. Clique em "+ Adicionar".</p>
+                                    ) : (
+                                        <div className="exercises-form-list">
+                                            {workoutForm.exercises.map((ex, index) => (
+                                                <div key={index} className="exercise-form-item">
+                                                    <input
+                                                        placeholder="Nome do exercício"
+                                                        value={ex.nome}
+                                                        onChange={e => updateExercise(index, 'nome', e.target.value)}
+                                                    />
+                                                    <input
+                                                        type="number"
+                                                        placeholder="Séries"
+                                                        value={ex.series}
+                                                        onChange={e => updateExercise(index, 'series', parseInt(e.target.value) || 0)}
+                                                        style={{ width: '70px' }}
+                                                    />
+                                                    <input
+                                                        placeholder="Reps"
+                                                        value={ex.repeticoes}
+                                                        onChange={e => updateExercise(index, 'repeticoes', e.target.value)}
+                                                        style={{ width: '80px' }}
+                                                    />
+                                                    <button type="button" className="btn-remove-exercise" onClick={() => removeExercise(index)}>🗑️</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="form-group checkbox-group">
+                                    <label>
+                                        <input
+                                            type="checkbox"
+                                            checked={workoutForm.is_active}
+                                            onChange={e => setWorkoutForm({ ...workoutForm, is_active: e.target.checked })}
+                                        />
+                                        <span>✅ Treino Ativo (disponível para sorteio)</span>
+                                    </label>
+                                </div>
+
+                                <button className="btn-primary btn-save" onClick={saveWorkout}>💾 Salvar Treino</button>
                             </>
                         )}
                     </div>
