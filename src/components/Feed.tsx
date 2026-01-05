@@ -386,7 +386,14 @@ export default function Feed() {
 
                                     {post.image_url && (
                                         <div className="post-image">
-                                            <img src={post.image_url} alt="Post" />
+                                            <img
+                                                src={post.image_url}
+                                                alt="Post"
+                                                onError={(e) => {
+                                                    console.error('Erro ao carregar imagem:', post.image_url)
+                                                    e.currentTarget.style.display = 'none'
+                                                }}
+                                            />
                                         </div>
                                     )}
 
