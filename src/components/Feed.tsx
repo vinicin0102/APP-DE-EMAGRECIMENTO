@@ -108,9 +108,16 @@ export default function Feed() {
     const handleCreatePost = async () => {
         if (!newPost.trim() || !user) return
         setPosting(true)
-        await createPost(newPost, imageUrl || undefined)
+
+        const { error } = await createPost(newPost, imageUrl || undefined)
+
+        if (error) {
+            alert('Erro ao publicar: ' + error.message)
+            setPosting(false)
+            return
+        }
+
         setNewPost('')
-        setImageUrl('')
         setImageUrl('')
         /* showImageInput removido */
         setPosting(false)

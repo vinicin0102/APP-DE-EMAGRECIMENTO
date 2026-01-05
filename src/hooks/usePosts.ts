@@ -111,12 +111,25 @@ export function usePosts() {
             shares_count: 0
         }).select().single()
 
-        if (data && !error && userData) {
-            const newPost = { ...data, user: userData }
+        if (error) {
+            console.error('Erro no insert do post:', error)
+            return { error }
+        }
+
+        if (data) {
+            const userFallback = userData || {
+                id: user.id,
+                name: user.user_metadata?.full_name || user.user_metadata?.name || 'Usuário',
+                email: user.email,
+                avatar_url: user.user_metadata?.avatar_url,
+                created_at: new Date().toISOString()
+            } as any
+
+            const newPost = { ...data, user: userFallback }
             setPosts(prev => [newPost, ...prev])
         }
 
-        return { error }
+        return { error: null }
     }
 
     const likePost = async (postId: string) => {
