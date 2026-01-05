@@ -1,16 +1,17 @@
 -- ============================================
 -- TABELA DE TREINOS PARA PLANO INDIVIDUAL
+-- Versão que remove políticas antigas primeiro
 -- ============================================
 
--- 1. Criar tabela de treinos
+-- 1. Criar tabela de treinos (se não existir)
 CREATE TABLE IF NOT EXISTS workouts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
     type VARCHAR(50) NOT NULL CHECK (type IN ('casa', 'academia', 'ambos')),
-    duration VARCHAR(50), -- Ex: "30 min", "45 min"
+    duration VARCHAR(50),
     difficulty VARCHAR(50) CHECK (difficulty IN ('iniciante', 'intermediario', 'avancado')),
-    exercises JSONB, -- Array de exercícios com nome, séries, repetições
+    exercises JSONB,
     video_url VARCHAR(500),
     thumbnail_url VARCHAR(500),
     is_active BOOLEAN DEFAULT true,
@@ -18,15 +19,15 @@ CREATE TABLE IF NOT EXISTS workouts (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- 2. Criar tabela de treinos atribuídos aos usuários
+-- 2. Criar tabela de treinos atribuídos aos usuários (se não existir)
 CREATE TABLE IF NOT EXISTS user_workouts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
     workout_id UUID REFERENCES workouts(id) ON DELETE CASCADE NOT NULL,
-    day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 1 AND 7), -- 1=Seg, 7=Dom
+    day_of_week INTEGER NOT NULL CHECK (day_of_week BETWEEN 1 AND 7),
     is_completed BOOLEAN DEFAULT false,
     completed_at TIMESTAMP WITH TIME ZONE,
-    plan_month DATE NOT NULL, -- Mês/Ano do plano (primeiro dia do mês)
+    plan_month DATE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     UNIQUE(user_id, day_of_week, plan_month)
 );
@@ -41,84 +42,51 @@ CREATE INDEX IF NOT EXISTS idx_user_workouts_month ON user_workouts(plan_month);
 ALTER TABLE workouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_workouts ENABLE ROW LEVEL SECURITY;
 
--- 5. Políticas para workouts (treinos)
--- Todos podem ver treinos ativos
-CREATE POLICY "Anyone can view active workouts"
+-- 5. REMOVER políticas antigas (se existirem)
+DROP POLICY IF EXISTS "Anyone can view active workouts" ON workouts;
+DROP POLICY IF EXISTS "Service role full access workouts" ON workouts;
+DROP POLICY IF EXISTS "Authenticated can view workouts" ON workouts;
+DROP POLICY IF EXISTS "Authenticated can insert workouts" ON workouts;
+DROP POLICY IF EXISTS "Authenticated can update workouts" ON workouts;
+DROP POLICY IF EXISTS "Authenticated can delete workouts" ON workouts;
+
+DROP POLICY IF EXISTS "Users view own workouts" ON user_workouts;
+DROP POLICY IF EXISTS "Users update own workouts" ON user_workouts;
+DROP POLICY IF EXISTS "System insert user workouts" ON user_workouts;
+
+-- 6. Criar novas políticas para workouts
+CREATE POLICY "Authenticated can view workouts"
 ON workouts FOR SELECT
-USING (is_active = true);
+USING (auth.role() = 'authenticated');
 
--- Apenas admins podem gerenciar (via service role no admin)
-CREATE POLICY "Service role full access workouts"
-ON workouts FOR ALL
-USING (auth.role() = 'service_role');
+CREATE POLICY "Authenticated can insert workouts"
+ON workouts FOR INSERT
+WITH CHECK (auth.role() = 'authenticated');
 
--- 6. Políticas para user_workouts
--- Usuários veem apenas seus próprios treinos
+CREATE POLICY "Authenticated can update workouts"
+ON workouts FOR UPDATE
+USING (auth.role() = 'authenticated');
+
+CREATE POLICY "Authenticated can delete workouts"
+ON workouts FOR DELETE
+USING (auth.role() = 'authenticated');
+
+-- 7. Políticas para user_workouts
 CREATE POLICY "Users view own workouts"
 ON user_workouts FOR SELECT
 USING (auth.uid() = user_id);
 
--- Usuários podem atualizar seus próprios treinos (marcar como completo)
 CREATE POLICY "Users update own workouts"
 ON user_workouts FOR UPDATE
 USING (auth.uid() = user_id);
 
--- Sistema pode inserir treinos para usuários
 CREATE POLICY "System insert user workouts"
 ON user_workouts FOR INSERT
 WITH CHECK (auth.role() = 'authenticated');
 
--- 7. Função para sortear treinos
-CREATE OR REPLACE FUNCTION generate_user_workout_plan(
-    p_user_id UUID,
-    p_workout_type VARCHAR(50),
-    p_plan_month DATE DEFAULT DATE_TRUNC('month', CURRENT_DATE)
-)
-RETURNS JSONB AS $$
-DECLARE
-    v_workouts UUID[];
-    v_workout_id UUID;
-    v_day INTEGER;
-    v_result JSONB := '[]'::JSONB;
-BEGIN
-    -- Deletar plano existente do mesmo mês
-    DELETE FROM user_workouts 
-    WHERE user_id = p_user_id 
-    AND plan_month = p_plan_month;
-    
-    -- Buscar treinos disponíveis (do tipo do usuário ou "ambos")
-    SELECT ARRAY_AGG(id) INTO v_workouts
-    FROM workouts 
-    WHERE is_active = true 
-    AND (type = p_workout_type OR type = 'ambos');
-    
-    -- Se não há treinos, retornar vazio
-    IF v_workouts IS NULL OR array_length(v_workouts, 1) IS NULL THEN
-        RETURN '{"error": "Nenhum treino disponível"}'::JSONB;
-    END IF;
-    
-    -- Atribuir um treino aleatório para cada dia da semana (Seg-Sáb = 1-6)
-    FOR v_day IN 1..6 LOOP
-        -- Sortear um treino aleatório
-        v_workout_id := v_workouts[1 + floor(random() * array_length(v_workouts, 1))::int];
-        
-        -- Inserir na tabela
-        INSERT INTO user_workouts (user_id, workout_id, day_of_week, plan_month)
-        VALUES (p_user_id, v_workout_id, v_day, p_plan_month);
-        
-        -- Adicionar ao resultado
-        v_result := v_result || jsonb_build_object(
-            'day', v_day,
-            'workout_id', v_workout_id
-        );
-    END LOOP;
-    
-    RETURN v_result;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
--- 8. Inserir alguns treinos de exemplo
-INSERT INTO workouts (title, description, type, duration, difficulty, exercises) VALUES
+-- 8. Inserir treinos de exemplo (se a tabela estiver vazia)
+INSERT INTO workouts (title, description, type, duration, difficulty, exercises) 
+SELECT * FROM (VALUES
 (
     'Treino HIIT em Casa',
     'Treino intenso de alta intensidade para queimar gordura',
@@ -159,6 +127,7 @@ INSERT INTO workouts (title, description, type, duration, difficulty, exercises)
     'iniciante',
     '[{"nome": "Caminhada/Esteira", "series": 1, "repeticoes": "15 min"}, {"nome": "Prancha", "series": 3, "repeticoes": "30 seg"}, {"nome": "Abdominal", "series": 3, "repeticoes": "20x"}]'::JSONB
 )
-ON CONFLICT DO NOTHING;
+) AS v(title, description, type, duration, difficulty, exercises)
+WHERE NOT EXISTS (SELECT 1 FROM workouts LIMIT 1);
 
-SELECT 'Tabelas de treinos criadas com sucesso!' as status;
+SELECT 'Tabelas de treinos configuradas com sucesso!' as status;
