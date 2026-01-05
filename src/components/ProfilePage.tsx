@@ -44,72 +44,70 @@ export default function ProfilePage() {
         }
     }
 
-    // Handler para Upload de Avatar com timeout
+    // Handler para Upload de Avatar - versão simplificada
     const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        if (!event.target.files || event.target.files.length === 0) return
+
+        const file = event.target.files[0]
+        console.log('📸 Arquivo selecionado:', file.name, file.size, 'bytes')
+
+        // Validação de tamanho (Max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('A imagem é muito grande! Use uma menor que 5MB.')
+            return
+        }
+
+        // Verificar autenticação
+        if (!user?.id) {
+            alert('Você precisa estar logado para alterar a foto.')
+            return
+        }
+
+        setUploadingAvatar(true)
+
         try {
-            if (!event.target.files || event.target.files.length === 0) return
+            const fileExt = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+            const fileName = `${user.id}_${Date.now()}.${fileExt}`
 
-            const file = event.target.files[0]
+            console.log('📤 Iniciando upload para:', fileName)
 
-            // Validação de tamanho (Max 5MB)
-            if (file.size > 5 * 1024 * 1024) {
-                alert('A imagem é muito grande! Use uma menor que 5MB.')
-                return
+            // Upload direto sem timeout complexo
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('avatars')
+                .upload(fileName, file, {
+                    cacheControl: '3600',
+                    upsert: true // Permite sobrescrever
+                })
+
+            console.log('📤 Resultado upload:', { uploadData, uploadError })
+
+            if (uploadError) {
+                throw new Error(`Upload falhou: ${uploadError.message}`)
             }
 
-            setUploadingAvatar(true)
+            // Gerar URL pública
+            const { data: urlData } = supabase.storage
+                .from('avatars')
+                .getPublicUrl(fileName)
 
-            // Timeout de 15 segundos para o upload
-            const uploadTimeout = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('Timeout: o upload demorou demais. Verifique sua conexão.')), 15000)
-            })
+            const publicUrl = urlData.publicUrl
+            console.log('🔗 URL pública:', publicUrl)
 
-            const uploadProcess = async () => {
-                // Verificar se o usuário está autenticado
-                if (!user?.id) {
-                    throw new Error('Usuário não autenticado. Faça login novamente.')
-                }
+            // Atualizar perfil no banco
+            const updateResult = await updateProfile({ avatar_url: publicUrl })
+            console.log('💾 Resultado updateProfile:', updateResult)
 
-                const fileExt = file.name.split('.').pop()
-                // Nome único sempre para evitar conflito de overwrite
-                const fileName = `${user.id}_${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`
-                const filePath = `${fileName}`
-
-                console.log('Iniciando upload seguro para:', filePath)
-
-                // Upload simples sem upsert (Insert Only)
-                const { error: uploadError } = await supabase.storage
-                    .from('avatars')
-                    .upload(filePath, file)
-
-                if (uploadError) {
-                    console.error('Erro Storage:', uploadError)
-                    throw new Error(`Falha no envio: ${uploadError.message}`)
-                }
-
-                const { data: { publicUrl } } = supabase.storage
-                    .from('avatars')
-                    .getPublicUrl(filePath)
-
-                console.log('URL gerada:', publicUrl)
-
-                // Atualiza perfil
-                const { error: dbError } = await updateProfile({ avatar_url: publicUrl })
-
-                if (dbError) throw new Error(`Falha ao salvar no perfil: ${dbError.message}`)
-
-                alert('Foto atualizada com sucesso! 📸')
+            if (updateResult?.error) {
+                throw new Error(`Erro ao salvar: ${updateResult.error.message}`)
             }
 
-            // Executa com timeout
-            await Promise.race([uploadProcess(), uploadTimeout])
+            alert('✅ Foto atualizada com sucesso!')
 
         } catch (error: any) {
-            console.error('Erro Upload:', error)
-            alert(`Erro: ${error.message || 'Falha desconhecida. Verifique se o bucket "avatars" existe no Supabase.'}`)
+            console.error('❌ Erro completo:', error)
+            alert(`Erro: ${error.message}`)
         } finally {
             setUploadingAvatar(false)
-            // Limpa o input para permitir selecionar a mesma foto se falhar
             if (fileInputRef.current) fileInputRef.current.value = ''
         }
     }

@@ -1,53 +1,60 @@
--- Script para criar/corrigir o bucket de avatars e suas permissões
+-- ============================================
+-- SCRIPT PARA CORRIGIR STORAGE DE AVATARS
+-- ============================================
+-- 
+-- IMPORTANTE: Antes de rodar este script, 
+-- você PRECISA criar o bucket manualmente:
+--
+-- 1. Vá em Supabase Dashboard > Storage
+-- 2. Clique em "New Bucket"
+-- 3. Nome: avatars
+-- 4. Marque "Public bucket" ✓
+-- 5. Clique em "Save"
+--
+-- Depois de criar o bucket, rode este script:
+-- ============================================
 
--- 1. Criar o bucket se não existir
-INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
-VALUES (
-    'avatars',
-    'avatars',
-    true,
-    5242880, -- 5MB
-    ARRAY['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-)
-ON CONFLICT (id) DO UPDATE SET
-    public = true,
-    file_size_limit = 5242880;
+-- Remover todas as políticas antigas do bucket avatars
+DO $$
+DECLARE
+    pol record;
+BEGIN
+    FOR pol IN 
+        SELECT policyname 
+        FROM pg_policies 
+        WHERE schemaname = 'storage' 
+        AND tablename = 'objects'
+    LOOP
+        BEGIN
+            EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', pol.policyname);
+        EXCEPTION WHEN OTHERS THEN
+            NULL;
+        END;
+    END LOOP;
+END $$;
 
--- 2. Remover políticas antigas
-DROP POLICY IF EXISTS "Public Access" ON storage.objects;
-DROP POLICY IF EXISTS "Avatar upload" ON storage.objects;
-DROP POLICY IF EXISTS "Anyone can view avatars" ON storage.objects;
-DROP POLICY IF EXISTS "Authenticated users can upload avatars" ON storage.objects;
-DROP POLICY IF EXISTS "Users can update own avatars" ON storage.objects;
-DROP POLICY IF EXISTS "Users can delete own avatars" ON storage.objects;
-
--- 3. Política para visualização pública
-CREATE POLICY "Avatars are publicly viewable"
+-- Política 1: Qualquer pessoa pode VER avatars
+CREATE POLICY "avatars_public_view"
 ON storage.objects FOR SELECT
 USING (bucket_id = 'avatars');
 
--- 4. Política para upload (usuários autenticados)
-CREATE POLICY "Authenticated users can upload avatars"
+-- Política 2: Usuários autenticados podem fazer UPLOAD de avatars
+CREATE POLICY "avatars_auth_insert"
 ON storage.objects FOR INSERT
 WITH CHECK (
     bucket_id = 'avatars' 
     AND auth.role() = 'authenticated'
 );
 
--- 5. Política para atualização
-CREATE POLICY "Users can update avatars"
+-- Política 3: Usuários autenticados podem ATUALIZAR avatars
+CREATE POLICY "avatars_auth_update"
 ON storage.objects FOR UPDATE
-USING (
-    bucket_id = 'avatars' 
-    AND auth.role() = 'authenticated'
-);
+USING (bucket_id = 'avatars' AND auth.role() = 'authenticated')
+WITH CHECK (bucket_id = 'avatars' AND auth.role() = 'authenticated');
 
--- 6. Política para deleção
-CREATE POLICY "Users can delete avatars"
+-- Política 4: Usuários autenticados podem DELETAR avatars
+CREATE POLICY "avatars_auth_delete"
 ON storage.objects FOR DELETE
-USING (
-    bucket_id = 'avatars' 
-    AND auth.role() = 'authenticated'
-);
+USING (bucket_id = 'avatars' AND auth.role() = 'authenticated');
 
-SELECT 'Bucket avatars configurado com sucesso!' as status;
+SELECT 'Políticas de storage configuradas!' as status;
