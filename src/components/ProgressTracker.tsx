@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import './ProgressTracker.css'
@@ -20,8 +20,9 @@ export default function ProgressTracker() {
     const [loading, setLoading] = useState(true)
     const [submitting, setSubmitting] = useState(false)
     const [planStatus, setPlanStatus] = useState<'none' | 'active' | 'overdue'>('none')
-    const [showForm, setShowForm] = useState(false)
+    const [showForm, setShowForm] = useState(true) // Start with form visible
     const [existingPlan, setExistingPlan] = useState<PlanData | null>(null)
+    const isMounted = useRef(true)
 
     // Form fields
     const [peso, setPeso] = useState('')
@@ -30,12 +31,29 @@ export default function ProgressTracker() {
     const [altura, setAltura] = useState('')
 
     useEffect(() => {
+        isMounted.current = true
+
+        // Safety timeout - force loading false after 3 seconds
+        const timeout = setTimeout(() => {
+            if (isMounted.current && loading) {
+                console.warn('ProgressTracker: Timeout atingido, forçando carregamento')
+                setLoading(false)
+                setShowForm(true)
+            }
+        }, 3000)
+
         checkPlanStatus()
+
+        return () => {
+            isMounted.current = false
+            clearTimeout(timeout)
+        }
     }, [user])
 
     const checkPlanStatus = async () => {
         if (!user) {
             setLoading(false)
+            setShowForm(true)
             return
         }
 
@@ -48,8 +66,15 @@ export default function ProgressTracker() {
                 .limit(1)
                 .single()
 
-            if (error && error.code !== 'PGRST116') {
-                console.error('Erro ao buscar plano:', error)
+            if (!isMounted.current) return
+
+            // Handle table not existing or other errors
+            if (error) {
+                console.warn('Plano não encontrado ou tabela não existe:', error.message)
+                setPlanStatus('none')
+                setShowForm(true)
+                setLoading(false)
+                return
             }
 
             if (data) {
@@ -67,16 +92,21 @@ export default function ProgressTracker() {
                 setMetaPeso(data.meta_peso?.toString() || '')
                 setLocalTreino(data.local_treino || '')
                 setAltura(data.altura?.toString() || '')
+                setShowForm(false)
             } else {
                 setPlanStatus('none')
                 setShowForm(true)
             }
         } catch (err) {
             console.error('Erro:', err)
-            setPlanStatus('none')
-            setShowForm(true)
+            if (isMounted.current) {
+                setPlanStatus('none')
+                setShowForm(true)
+            }
         } finally {
-            setLoading(false)
+            if (isMounted.current) {
+                setLoading(false)
+            }
         }
     }
 
