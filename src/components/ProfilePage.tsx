@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase'
 import './ProfilePage.css'
 
 export default function ProfilePage() {
-    const { profile, signOut, updateProfile } = useAuth()
+    const { user, profile, signOut, updateProfile } = useAuth()
     const { logs, addLog, getWeightChange } = useWeightLogs()
     const [activeSection, setActiveSection] = useState<'overview' | 'weight' | 'settings'>('overview')
 
@@ -65,9 +65,14 @@ export default function ProfilePage() {
             })
 
             const uploadProcess = async () => {
+                // Verificar se o usuário está autenticado
+                if (!user?.id) {
+                    throw new Error('Usuário não autenticado. Faça login novamente.')
+                }
+
                 const fileExt = file.name.split('.').pop()
                 // Nome único sempre para evitar conflito de overwrite
-                const fileName = `${profile?.id}_${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`
+                const fileName = `${user.id}_${Date.now()}_${Math.floor(Math.random() * 1000)}.${fileExt}`
                 const filePath = `${fileName}`
 
                 console.log('Iniciando upload seguro para:', filePath)
