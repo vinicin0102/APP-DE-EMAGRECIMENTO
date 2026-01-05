@@ -95,14 +95,26 @@ export function usePosts() {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return { error: new Error('Not authenticated') }
 
-        const { error } = await supabase.from('posts').insert({
+        // Fetch user profile immediately to use in optimistic update or result
+        const { data: userData } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', user.id)
+            .single()
+
+        const { data, error } = await supabase.from('posts').insert({
             user_id: user.id,
             content,
             image_url: imageUrl,
             likes_count: 0,
             comments_count: 0,
             shares_count: 0
-        })
+        }).select().single()
+
+        if (data && !error && userData) {
+            const newPost = { ...data, user: userData }
+            setPosts(prev => [newPost, ...prev])
+        }
 
         return { error }
     }
