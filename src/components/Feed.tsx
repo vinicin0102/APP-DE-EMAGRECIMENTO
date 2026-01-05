@@ -47,7 +47,7 @@ export default function Feed() {
             setImageUrl(data.publicUrl)
         } catch (error: any) {
             console.error('Erro no upload:', error)
-            alert('Erro ao enviar imagem. Verifique no Admin se o bucket "posts-images" foi criado.')
+            alert(`Erro ao enviar imagem: ${error.message || 'Erro desconhecido'}`)
         } finally {
             setUploading(false)
         }
