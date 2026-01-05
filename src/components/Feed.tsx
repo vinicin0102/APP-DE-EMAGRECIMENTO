@@ -313,7 +313,7 @@ export default function Feed() {
                         <button
                             className="btn-primary btn-post"
                             onClick={handleCreatePost}
-                            disabled={!newPost.trim() || posting}
+                            disabled={(!newPost.trim() && !imageUrl) || posting}
                         >
                             {posting ? 'Publicando...' : 'Publicar'}
                         </button>
