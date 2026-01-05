@@ -8,11 +8,11 @@ export function usePosts() {
     const [error, setError] = useState<Error | null>(null)
     const isMounted = useRef(true)
 
-    const fetchPosts = async () => {
+    const fetchPosts = async (silent = false) => {
         if (!isMounted.current) return
 
         try {
-            setLoading(true)
+            if (!silent) setLoading(true)
 
             // Criar timeout manual
             const timeoutPromise = new Promise<null>((_, reject) => {
@@ -35,7 +35,7 @@ export function usePosts() {
             if (result === null) {
                 // Timeout atingido
                 console.warn('Timeout ao buscar posts')
-                setPosts([])
+                if (!silent) setPosts([])
                 return
             }
 
@@ -43,17 +43,17 @@ export function usePosts() {
 
             if (queryError) {
                 console.warn('Erro ao buscar posts:', queryError.message)
-                setPosts([])
+                if (!silent) setPosts([])
             } else {
                 setPosts(data || [])
             }
         } catch (err) {
             console.error('Erro ao buscar posts:', err)
-            if (isMounted.current) {
+            if (isMounted.current && !silent) {
                 setPosts([])
             }
         } finally {
-            if (isMounted.current) {
+            if (isMounted.current && !silent) {
                 setLoading(false)
             }
         }
@@ -78,7 +78,7 @@ export function usePosts() {
                 { event: '*', schema: 'public', table: 'posts' },
                 () => {
                     if (isMounted.current) {
-                        fetchPosts()
+                        fetchPosts(true)
                     }
                 }
             )
