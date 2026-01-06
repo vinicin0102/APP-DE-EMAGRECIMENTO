@@ -66,6 +66,28 @@ interface Workout {
     is_active: boolean
 }
 
+interface IndividualPlan {
+    id: string
+    user_id: string
+    peso: number
+    meta_peso: number
+    local_treino: string
+    altura: number
+    status: 'pending' | 'active' | 'overdue' | 'delivered'
+    expires_at?: string
+    created_at: string
+    updated_at?: string
+    user?: User
+}
+
+interface UserWorkoutAssignment {
+    id?: string
+    user_id: string
+    workout_id: string
+    day_of_week: number
+    plan_month: string
+}
+
 // Módulos padrão
 const defaultModules: Module[] = [
     {
@@ -112,7 +134,7 @@ const defaultAIResponses: AIResponse[] = [
 
 export default function AdminPanel() {
     const { user, profile } = useAuth()
-    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'posts' | 'challenges' | 'modules' | 'workouts' | 'ai' | 'settings' | 'logs' | 'payments'>('dashboard')
+    const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'posts' | 'challenges' | 'modules' | 'workouts' | 'deliveries' | 'ai' | 'settings' | 'logs' | 'payments'>('dashboard')
     const [users, setUsers] = useState<User[]>([])
     const [posts, setPosts] = useState<(Post & { user?: User })[]>([])
     const [challenges, setChallenges] = useState<Challenge[]>([])
@@ -125,7 +147,12 @@ export default function AdminPanel() {
 
     // Modal states
     const [showModal, setShowModal] = useState(false)
-    const [modalType, setModalType] = useState<'challenge' | 'module' | 'lesson' | 'ai' | 'user' | 'workout'>('challenge')
+    const [modalType, setModalType] = useState<'challenge' | 'module' | 'lesson' | 'ai' | 'user' | 'workout' | 'delivery'>('challenge')
+    const [individualPlans, setIndividualPlans] = useState<IndividualPlan[]>([])
+    const [selectedPlan, setSelectedPlan] = useState<IndividualPlan | null>(null)
+    const [deliveryAssignments, setDeliveryAssignments] = useState<{ [day: number]: string }>({
+        1: '', 2: '', 3: '', 4: '', 5: '', 6: ''
+    })
     const [workouts, setWorkouts] = useState<Workout[]>([])
     const [workoutForm, setWorkoutForm] = useState<{
         title: string; description: string; type: 'casa' | 'academia' | 'ambos';
@@ -178,16 +205,18 @@ export default function AdminPanel() {
     const fetchData = async () => {
         try {
             setLoading(true)
-            const [usersRes, postsRes, challengesRes, workoutsRes] = await Promise.all([
+            const [usersRes, postsRes, challengesRes, workoutsRes, plansRes] = await Promise.all([
                 supabase.from('users').select('*').order('created_at', { ascending: false }),
                 supabase.from('posts').select('*, user:users(*)').order('created_at', { ascending: false }),
                 supabase.from('challenges').select('*').order('created_at', { ascending: false }),
-                supabase.from('workouts').select('*').order('created_at', { ascending: false })
+                supabase.from('workouts').select('*').order('created_at', { ascending: false }),
+                supabase.from('individual_plans').select('*, user:users(*)').order('created_at', { ascending: false })
             ])
             setUsers(usersRes.data || [])
             setPosts(postsRes.data || [])
             setChallenges(challengesRes.data || [])
             setWorkouts(workoutsRes.data || [])
+            setIndividualPlans(plansRes.data || [])
         } catch (error) {
             console.error('Erro ao carregar dados do Admin:', error)
         } finally {
@@ -692,6 +721,74 @@ export default function AdminPanel() {
         }))
     }
 
+    // Delivery actions (Planos Individuais) - Apenas ativar/renovar
+    const activatePlan = async (plan: IndividualPlan) => {
+        try {
+            const expiresAt = new Date()
+            expiresAt.setDate(expiresAt.getDate() + 30)
+
+            await supabase
+                .from('individual_plans')
+                .update({
+                    status: 'active',
+                    expires_at: expiresAt.toISOString()
+                })
+                .eq('id', plan.id)
+
+            addLog(`Plano ativado para ${plan.user?.name || 'usuário'} - válido por 30 dias`)
+            await fetchData()
+            alert('Plano ativado com sucesso! A usuária agora receberá treinos diários automaticamente.')
+        } catch (err) {
+            console.error('Erro ao ativar plano:', err)
+            alert('Erro ao ativar plano. Tente novamente.')
+        }
+    }
+
+    const renewPlan = async (plan: IndividualPlan) => {
+        try {
+            const expiresAt = new Date()
+            expiresAt.setDate(expiresAt.getDate() + 30)
+
+            await supabase
+                .from('individual_plans')
+                .update({
+                    status: 'active',
+                    expires_at: expiresAt.toISOString()
+                })
+                .eq('id', plan.id)
+
+            addLog(`Plano renovado para ${plan.user?.name || 'usuário'} - +30 dias`)
+            await fetchData()
+            alert('Plano renovado por mais 30 dias!')
+        } catch (err) {
+            console.error('Erro ao renovar plano:', err)
+            alert('Erro ao renovar plano. Tente novamente.')
+        }
+    }
+
+    const updatePlanStatus = async (planId: string, status: 'pending' | 'active' | 'overdue') => {
+        try {
+            const updateData: any = { status }
+
+            // Se ativando, definir expiração
+            if (status === 'active') {
+                const expiresAt = new Date()
+                expiresAt.setDate(expiresAt.getDate() + 30)
+                updateData.expires_at = expiresAt.toISOString()
+            }
+
+            await supabase
+                .from('individual_plans')
+                .update(updateData)
+                .eq('id', planId)
+
+            addLog(`Status do plano atualizado para ${status}`)
+            await fetchData()
+        } catch (err) {
+            console.error('Erro ao atualizar status:', err)
+        }
+    }
+
     // Settings
     const saveSettings = () => {
         localStorage.setItem('appSettings', JSON.stringify(settings))
@@ -761,6 +858,7 @@ export default function AdminPanel() {
                     { id: 'challenges', label: '🏆 Desafios' },
                     { id: 'modules', label: '📚 Módulos/Aulas' },
                     { id: 'workouts', label: '💪 Treinos' },
+                    { id: 'deliveries', label: '📦 Entregas' },
                     { id: 'ai', label: '🤖 IA' },
                     { id: 'settings', label: '⚙️ Config' },
                     { id: 'logs', label: '📋 Logs' },
@@ -1156,6 +1254,163 @@ export default function AdminPanel() {
                                                 )}
                                             </div>
                                         ))
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Entregas - Planos Individuais */}
+                        {activeTab === 'deliveries' && (
+                            <div className="section-admin">
+                                <div className="section-header-admin">
+                                    <h3>📦 Planos Individuais ({individualPlans.length})</h3>
+                                </div>
+                                <p className="section-hint">
+                                    Gerencie os planos individuais das usuárias. Após ativar o plano, cada usuária recebe
+                                    automaticamente 1 treino diferente por dia durante 30 dias. Cadastre os treinos na aba "Treinos".
+                                </p>
+
+                                {/* Stats de Entregas */}
+                                <div className="delivery-stats">
+                                    <div className="stat-mini pending">
+                                        <span className="stat-value">{individualPlans.filter(p => p.status === 'pending').length}</span>
+                                        <span className="stat-label">Pendentes</span>
+                                    </div>
+                                    <div className="stat-mini active">
+                                        <span className="stat-value">{individualPlans.filter(p => p.status === 'active').length}</span>
+                                        <span className="stat-label">Ativos</span>
+                                    </div>
+                                    <div className="stat-mini overdue">
+                                        <span className="stat-value">{individualPlans.filter(p => p.status === 'overdue').length}</span>
+                                        <span className="stat-label">Vencidos</span>
+                                    </div>
+                                </div>
+
+                                {/* Lista de Planos */}
+                                <div className="deliveries-list">
+                                    {individualPlans.length === 0 ? (
+                                        <div className="empty-state-admin">
+                                            <p>Nenhum plano individual solicitado ainda.</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Planos Pendentes - Prioridade */}
+                                            {individualPlans.filter(p => p.status === 'pending').length > 0 && (
+                                                <div className="delivery-section">
+                                                    <h4>⏳ Aguardando Entrega</h4>
+                                                    {individualPlans.filter(p => p.status === 'pending').map(plan => (
+                                                        <div key={plan.id} className="delivery-card pending">
+                                                            <div className="delivery-user">
+                                                                <div className="user-avatar">
+                                                                    {plan.user?.name?.charAt(0).toUpperCase() || '?'}
+                                                                </div>
+                                                                <div className="user-info">
+                                                                    <h5>{plan.user?.name || 'Usuária'}</h5>
+                                                                    <span className="user-email">{plan.user?.email}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="delivery-details">
+                                                                <div className="detail-row">
+                                                                    <span>📏 Altura:</span>
+                                                                    <strong>{plan.altura} cm</strong>
+                                                                </div>
+                                                                <div className="detail-row">
+                                                                    <span>⚖️ Peso atual:</span>
+                                                                    <strong>{plan.peso} kg</strong>
+                                                                </div>
+                                                                <div className="detail-row">
+                                                                    <span>🎯 Meta:</span>
+                                                                    <strong>{plan.meta_peso} kg</strong>
+                                                                </div>
+                                                                <div className="detail-row">
+                                                                    <span>📍 Local:</span>
+                                                                    <strong>
+                                                                        {plan.local_treino === 'casa' ? '🏠 Em casa' :
+                                                                            plan.local_treino === 'academia' ? '🏋️ Academia' : '🔄 Ambos'}
+                                                                    </strong>
+                                                                </div>
+                                                                <div className="detail-row">
+                                                                    <span>📅 Solicitado:</span>
+                                                                    <strong>{new Date(plan.created_at).toLocaleDateString('pt-BR')}</strong>
+                                                                </div>
+                                                            </div>
+                                                            <div className="delivery-actions">
+                                                                <button
+                                                                    className="btn-primary delivery-btn"
+                                                                    onClick={() => activatePlan(plan)}
+                                                                >
+                                                                    ✅ Ativar Plano (30 dias)
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Planos Ativos */}
+                                            {individualPlans.filter(p => p.status === 'active').length > 0 && (
+                                                <div className="delivery-section">
+                                                    <h4>✅ Planos Ativos</h4>
+                                                    {individualPlans.filter(p => p.status === 'active').map(plan => (
+                                                        <div key={plan.id} className="delivery-card active">
+                                                            <div className="delivery-user">
+                                                                <div className="user-avatar active">
+                                                                    {plan.user?.name?.charAt(0).toUpperCase() || '?'}
+                                                                </div>
+                                                                <div className="user-info">
+                                                                    <h5>{plan.user?.name || 'Usuária'}</h5>
+                                                                    <span className="user-email">{plan.user?.email}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="delivery-details compact">
+                                                                <span>📍 {plan.local_treino === 'casa' ? 'Casa' : plan.local_treino === 'academia' ? 'Academia' : 'Ambos'}</span>
+                                                                <span>⚖️ {plan.peso}kg → {plan.meta_peso}kg</span>
+                                                                <span>⏰ Até: {plan.expires_at ? new Date(plan.expires_at).toLocaleDateString('pt-BR') : 'N/A'}</span>
+                                                            </div>
+                                                            <div className="delivery-actions">
+                                                                <button
+                                                                    className="btn-secondary"
+                                                                    onClick={() => renewPlan(plan)}
+                                                                >
+                                                                    🔄 Renovar +30 dias
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+
+                                            {/* Planos Vencidos */}
+                                            {individualPlans.filter(p => p.status === 'overdue').length > 0 && (
+                                                <div className="delivery-section">
+                                                    <h4>⚠️ Planos Vencidos</h4>
+                                                    {individualPlans.filter(p => p.status === 'overdue').map(plan => (
+                                                        <div key={plan.id} className="delivery-card overdue">
+                                                            <div className="delivery-user">
+                                                                <div className="user-avatar overdue">
+                                                                    {plan.user?.name?.charAt(0).toUpperCase() || '?'}
+                                                                </div>
+                                                                <div className="user-info">
+                                                                    <h5>{plan.user?.name || 'Usuária'}</h5>
+                                                                    <span className="user-email">{plan.user?.email}</span>
+                                                                </div>
+                                                            </div>
+                                                            <div className="delivery-details compact">
+                                                                <span>📅 Expirou: {plan.expires_at ? new Date(plan.expires_at).toLocaleDateString('pt-BR') : 'N/A'}</span>
+                                                            </div>
+                                                            <div className="delivery-actions">
+                                                                <button
+                                                                    className="btn-warning"
+                                                                    onClick={() => updatePlanStatus(plan.id, 'pending')}
+                                                                >
+                                                                    🔄 Reativar
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </>
                                     )}
                                 </div>
                             </div>

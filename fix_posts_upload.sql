@@ -7,7 +7,7 @@ ON CONFLICT (id) DO UPDATE SET public = true;
 
 -- 2. Limpeza de políticas antigas para evitar conflitos
 DROP POLICY IF EXISTS "Public Access Posts" ON storage.objects;
-DROP POLICY IF EXISTS "Auth Insert Posts" ON storage.objects;
+DROP POLICY IF EXISTS "Auth Insert Postas" ON storage.objects;
 DROP POLICY IF EXISTS "Auth Update Posts" ON storage.objects;
 DROP POLICY IF EXISTS "Auth Delete Posts" ON storage.objects;
 DROP POLICY IF EXISTS "Post Images Public Access" ON storage.objects;

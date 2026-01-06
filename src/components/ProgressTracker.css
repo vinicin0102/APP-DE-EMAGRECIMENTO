@@ -60,6 +60,19 @@
     margin-top: 16px;
     position: relative;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .back-btn {
@@ -80,6 +93,14 @@
     text-align: center;
 }
 
+/* Active Header */
+.plan-active-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
 .plan-active-badge {
     display: inline-flex;
     align-items: center;
@@ -90,7 +111,6 @@
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 600;
-    margin-bottom: 20px;
 }
 
 .badge-icon {
@@ -104,7 +124,313 @@
     font-size: 0.75rem;
 }
 
-/* Plan Title */
+.days-remaining {
+    text-align: right;
+}
+
+.days-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #FF1493;
+    line-height: 1;
+}
+
+.days-label {
+    font-size: 0.7rem;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Section Title */
+.section-title {
+    font-family: 'Oswald', 'Impact', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 16px;
+    text-align: left;
+}
+
+/* Today Workout Section */
+.today-workout-section {
+    text-align: left;
+}
+
+.today-workout-card {
+    background: linear-gradient(135deg, #fff5f8, #fff0f5);
+    border: 2px solid #FFE0EC;
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.today-workout-card.completed {
+    border-color: #00C9A7;
+    background: linear-gradient(135deg, #f0fdf9, #e6fff9);
+}
+
+.completed-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 201, 167, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    gap: 8px;
+}
+
+.completed-icon {
+    font-size: 3rem;
+}
+
+.workout-header h3 {
+    margin: 0 0 12px;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.workout-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.workout-badges .badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge.type-casa {
+    background: #E8F4FD;
+    color: #2979FF;
+}
+
+.badge.type-academia {
+    background: #FFF4E5;
+    color: #FF6D00;
+}
+
+.badge.type-ambos {
+    background: #E8F5E9;
+    color: #00C853;
+}
+
+.badge.difficulty-iniciante {
+    background: #E8F5E9;
+    color: #00C853;
+}
+
+.badge.difficulty-intermediario {
+    background: #FFF8E1;
+    color: #FF9800;
+}
+
+.badge.difficulty-avancado {
+    background: #FCE4EC;
+    color: #FF4081;
+}
+
+.badge.duration {
+    background: #F3E5F5;
+    color: #9C27B0;
+}
+
+.workout-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.btn-view-workout {
+    width: 100%;
+    padding: 14px;
+    background: #1a1a2e;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: all 0.3s ease;
+}
+
+.btn-view-workout:hover {
+    background: #2a2a4e;
+    transform: translateY(-2px);
+}
+
+.btn-complete-workout {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, #00C9A7, #00A67E);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-complete-workout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 201, 167, 0.4);
+}
+
+.workout-tip {
+    text-align: center;
+    color: #888;
+    font-size: 0.85rem;
+    margin: 16px 0;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.no-workout-message {
+    text-align: center;
+    padding: 40px 20px;
+    color: #666;
+}
+
+.no-workout-message .icon {
+    font-size: 3rem;
+    display: block;
+    margin-bottom: 12px;
+}
+
+.no-workout-message .hint {
+    font-size: 0.85rem;
+    color: #999;
+    margin-top: 8px;
+}
+
+.btn-edit-profile {
+    margin-top: 20px;
+    padding: 12px 24px;
+    background: transparent;
+    color: #666;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-edit-profile:hover {
+    border-color: #1a1a2e;
+    color: #1a1a2e;
+}
+
+/* Overdue Section */
+.plan-status-container.overdue {
+    padding: 20px 0;
+}
+
+.overdue-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+}
+
+.overdue-title {
+    font-family: 'Oswald', 'Impact', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 0 0 12px;
+}
+
+.overdue-message {
+    color: #666;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.renewal-benefits {
+    text-align: left;
+    background: #f8f9fa;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.renewal-benefits h4 {
+    font-size: 1rem;
+    color: #1a1a2e;
+    margin: 0 0 12px;
+}
+
+.renewal-benefits ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.renewal-benefits li {
+    padding: 8px 0;
+    font-size: 0.95rem;
+    color: #444;
+}
+
+.btn-renew {
+    width: 100%;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #FF1493, #FF69B4);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-family: 'Oswald', 'Impact', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 12px;
+}
+
+.btn-renew:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(255, 20, 147, 0.4);
+}
+
+.btn-secondary-link {
+    background: none;
+    border: none;
+    color: #666;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.btn-secondary-link:hover {
+    color: #1a1a2e;
+}
+
+/* Plan Form */
+.plan-form-container {
+    padding-top: 16px;
+    text-align: center;
+}
+
 .plan-title {
     font-family: 'Oswald', 'Impact', sans-serif;
     font-size: 2rem;
@@ -115,10 +441,6 @@
     letter-spacing: -0.5px;
 }
 
-.plan-title.overdue {
-    color: #1a1a2e;
-}
-
 .plan-subtitle {
     color: #666;
     font-size: 0.9rem;
@@ -127,42 +449,6 @@
     max-width: 320px;
     margin-left: auto;
     margin-right: auto;
-}
-
-/* Plan Data Grid */
-.plan-data-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    margin: 24px 0;
-}
-
-.plan-data-item {
-    background: #f8f9fa;
-    border-radius: 12px;
-    padding: 16px;
-    text-align: left;
-}
-
-.data-label {
-    display: block;
-    font-size: 0.75rem;
-    color: #888;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.data-value {
-    display: block;
-    font-size: 1.25rem;
-    font-weight: 700;
-    color: #1a1a2e;
-}
-
-/* Plan Form */
-.plan-form-container {
-    padding-top: 16px;
 }
 
 .plan-form {
@@ -201,17 +487,38 @@
     border-color: #FF1493;
 }
 
-.form-field input:disabled {
-    background: #f5f5f5;
-    color: #999;
-}
-
 .form-field select {
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 16px center;
     padding-right: 40px;
+}
+
+.plan-benefits {
+    text-align: left;
+    background: linear-gradient(135deg, #fff5f8, #fff0f5);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.plan-benefits h4 {
+    font-size: 1rem;
+    color: #1a1a2e;
+    margin: 0 0 12px;
+}
+
+.plan-benefits ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.plan-benefits li {
+    padding: 6px 0;
+    font-size: 0.9rem;
+    color: #444;
 }
 
 /* Plan Buttons */
@@ -224,7 +531,6 @@
     border-radius: 25px;
     cursor: pointer;
     transition: all 0.3s ease;
-    text-transform: none;
 }
 
 .plan-btn.primary {
@@ -248,28 +554,170 @@
     box-shadow: none;
 }
 
-.plan-btn.secondary {
-    background: transparent;
-    color: #1a1a2e;
-    border: 2px solid #1a1a2e;
+/* Workout Modal */
+.workout-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    backdrop-filter: blur(4px);
 }
 
-.plan-btn.secondary:hover {
-    background: #1a1a2e;
-    color: #fff;
+.workout-modal {
+    background: white;
+    border-radius: 24px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalSlideUp 0.3s ease-out;
 }
 
-.plan-btn.renew {
-    background: #fff;
+@keyframes modalSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.workout-modal .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: #f0f0f0;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.workout-modal .modal-close:hover {
+    background: #e0e0e0;
+}
+
+.workout-modal h2 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+    font-weight: 700;
     color: #1a1a2e;
-    border: 2px solid #1a1a2e;
-    font-family: 'Oswald', 'Impact', sans-serif;
+    padding-right: 48px;
+}
+
+.workout-modal-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+.workout-modal-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 14px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.workout-modal-meta span {
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.workout-modal h3 {
+    font-size: 1rem;
+    color: #1a1a2e;
+    margin: 0 0 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.exercises-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 24px;
+}
+
+.exercise-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.exercise-number {
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, #FF1493, #FF69B4);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.exercise-info {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.exercise-name {
+    font-weight: 600;
+    color: #1a1a2e;
+    font-size: 0.95rem;
+}
+
+.exercise-sets {
+    color: #FF1493;
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.btn-complete-modal {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #00C9A7, #00A67E);
+    color: white;
+    border: none;
+    border-radius: 16px;
     font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
-.plan-btn.renew:hover {
-    background: #1a1a2e;
-    color: #fff;
+.btn-complete-modal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 201, 167, 0.4);
 }
 
 /* Responsive */
@@ -282,227 +730,21 @@
         font-size: 1.75rem;
     }
 
-    .plan-btn.primary,
-    .plan-btn.renew {
+    .plan-btn.primary {
         font-size: 1rem;
         padding: 14px 20px;
     }
 
-    .plan-data-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-/* Animation */
-.plan-card {
-    animation: slideUp 0.4s ease-out;
-}
-
-@keyframes slideUp {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
+    .plan-active-header {
+        flex-direction: column;
+        gap: 12px;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
+    .days-remaining {
+        text-align: center;
     }
-}
 
-/* Overdue styling */
-.plan-status-container.overdue .plan-form {
-    opacity: 0.7;
-}
-
-.plan-status-container.overdue .form-field input {
-    background: #f5f5f5;
-}
-
-/* Workouts List */
-.workouts-list {
-    margin: 20px 0;
-    text-align: left;
-}
-
-.workout-day-card {
-    background: #f8f9fa;
-    border-radius: 16px;
-    padding: 16px;
-    margin-bottom: 12px;
-    border-left: 4px solid #FF1493;
-    transition: all 0.3s ease;
-}
-
-.workout-day-card.completed {
-    border-left-color: #00C9A7;
-    background: #f0fdf9;
-}
-
-.workout-day-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.day-name {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.check-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid #ddd;
-    background: white;
-    font-size: 1rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s;
-}
-
-.check-btn.checked {
-    background: #00C9A7;
-    border-color: #00C9A7;
-    color: white;
-}
-
-.workout-info {
-    cursor: pointer;
-}
-
-.workout-info h4 {
-    margin: 0 0 6px;
-    font-size: 1rem;
-    font-weight: 600;
-    color: #1a1a2e;
-}
-
-.workout-meta {
-    display: flex;
-    gap: 12px;
-    font-size: 0.8rem;
-    color: #666;
-}
-
-.no-workouts {
-    text-align: center;
-    padding: 32px 16px;
-    color: #666;
-}
-
-.no-workouts p {
-    margin-bottom: 16px;
-}
-
-/* Workout Modal */
-.workout-modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-}
-
-.workout-modal {
-    background: white;
-    border-radius: 24px;
-    padding: 24px;
-    max-width: 400px;
-    width: 100%;
-    max-height: 80vh;
-    overflow-y: auto;
-    position: relative;
-}
-
-.workout-modal .modal-close {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: #f0f0f0;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    font-size: 1.25rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.workout-modal h2 {
-    margin: 0 0 8px;
-    font-size: 1.5rem;
-    color: #1a1a2e;
-    padding-right: 40px;
-}
-
-.workout-description {
-    color: #666;
-    font-size: 0.9rem;
-    margin-bottom: 16px;
-    line-height: 1.5;
-}
-
-.workout-details {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    margin-bottom: 20px;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 12px;
-}
-
-.workout-details span {
-    font-size: 0.85rem;
-    color: #444;
-}
-
-.workout-modal h3 {
-    font-size: 1rem;
-    color: #1a1a2e;
-    margin: 0 0 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}
-
-.exercises-list {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.exercise-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px;
-    background: #f8f9fa;
-    border-radius: 10px;
-}
-
-.exercise-name {
-    font-weight: 600;
-    color: #1a1a2e;
-}
-
-.exercise-sets {
-    color: #FF1493;
-    font-weight: 600;
-    font-size: 0.9rem;
+    .workout-badges {
+        justify-content: center;
+    }
 }
