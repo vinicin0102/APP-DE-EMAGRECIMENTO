@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
 import { useAuth } from './contexts/AuthContext'
+import { supabase } from './lib/supabase'
 
 // Components
 import AuthModal from './components/AuthModal'
@@ -20,7 +21,42 @@ const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com']
 function App() {
   const [activeTab, setActiveTab] = useState('feed')
   const [showAuth, setShowAuth] = useState(false)
+  const [hasPlanActive, setHasPlanActive] = useState(false)
   const { user, profile, loading } = useAuth()
+
+  // Verificar status do plano do usuário
+  useEffect(() => {
+    const checkPlanStatus = async () => {
+      if (!user) {
+        setHasPlanActive(false)
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('individual_plans')
+          .select('expires_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+
+        if (error || !data) {
+          setHasPlanActive(false)
+          return
+        }
+
+        const expiresAt = new Date(data.expires_at)
+        const now = new Date()
+        setHasPlanActive(expiresAt > now)
+      } catch (err) {
+        console.error('Erro ao verificar plano:', err)
+        setHasPlanActive(false)
+      }
+    }
+
+    checkPlanStatus()
+  }, [user])
 
   // Verifica admin na lista de emails permitidos
   const userEmail = user?.email?.toLowerCase().trim()
@@ -205,13 +241,22 @@ function App() {
     <div className="app">
       <main className="main-content">
         {activeTab === 'feed' && <Feed />}
-        {activeTab === 'lessons' && <MemberArea />}
+        {activeTab === 'lessons' && (hasPlanActive ? <MemberArea /> : (
+          <div className="locked-content-screen">
+            <div className="locked-icon">🔒</div>
+            <h2>Conteúdo Exclusivo</h2>
+            <p>Esta área é exclusiva para assinantes do plano premium.</p>
+            <button className="btn-primary" onClick={() => setActiveTab('progress')}>
+              Quero Assinar Agora
+            </button>
+          </div>
+        ))}
         {activeTab === 'progress' && <ProgressTracker />}
         {activeTab === 'challenges' && <ChallengesPage />}
         {activeTab === 'profile' && <ProfilePage />}
         {activeTab === 'support' && <Support />}
         {activeTab === 'admin' && <AdminPanel />}
-        <AIAssistantsButton />
+        {activeTab === 'progress' && hasPlanActive && <AIAssistantsButton />}
       </main>
       <PWAInstallPrompt />
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />

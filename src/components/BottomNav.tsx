@@ -58,7 +58,7 @@ const icons = {
 export default function BottomNav({ activeTab, setActiveTab, isAdmin }: BottomNavProps) {
     const navItems = [
         { id: 'feed', label: 'Feed', icon: icons.feed },
-        { id: 'lessons', label: 'Aulas', icon: icons.lessons },
+        { id: 'lessons', label: 'Treinos', icon: icons.lessons },
         { id: 'progress', label: 'Meu Plano', icon: icons.plans },
         { id: 'challenges', label: 'Desafios', icon: icons.challenges },
         { id: 'profile', label: 'Perfil', icon: icons.profile },
