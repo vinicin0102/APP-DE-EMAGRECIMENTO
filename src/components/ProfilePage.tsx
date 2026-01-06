@@ -138,6 +138,20 @@ export default function ProfilePage() {
         return 'Obesidade'
     }
 
+    // Handler para Logout
+    const handleSignOut = async () => {
+        try {
+            if (window.confirm('Tem certeza que deseja sair?')) {
+                await signOut()
+                // Forçar recarregamento se não redirecionar automaticamente
+                window.location.reload()
+            }
+        } catch (error) {
+            console.error('Erro ao sair:', error)
+            alert('Erro ao sair da conta')
+        }
+    }
+
     return (
         <div className="profile-page-container">
             <header className="page-header page-header-with-action">
@@ -425,7 +439,7 @@ export default function ProfilePage() {
 
                         <div className="settings-card">
                             <h3>Conta</h3>
-                            <button className="btn-signout" onClick={signOut}>
+                            <button className="btn-signout" onClick={handleSignOut}>
                                 Sair da conta
                             </button>
                         </div>
