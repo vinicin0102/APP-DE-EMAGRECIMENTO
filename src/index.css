@@ -83,23 +83,29 @@ html {
   color: var(--text-primary);
   line-height: 1.6;
   scroll-behavior: smooth;
+  overscroll-behavior: none;
+  /* Impede o efeito elástico no iOS */
+  height: 100%;
+  /* Fixar altura */
 }
 
 body {
-  min-height: 100vh;
-  min-height: 100dvh;
-  overflow-x: hidden;
+  height: 100%;
+  height: 100dvh;
+  /* Altura dinâmica para mobile viewport */
+  overflow: hidden;
+  /* Oculta scrollbar principal, vamos scrollar internamente */
   background:
     radial-gradient(ellipse 80% 50% at 20% 10%, rgba(255, 20, 147, 0.06) 0%, transparent 50%),
     radial-gradient(ellipse 60% 60% at 80% 90%, rgba(255, 182, 193, 0.04) 0%, transparent 50%),
     radial-gradient(ellipse 50% 50% at 50% 50%, rgba(219, 112, 147, 0.03) 0%, transparent 50%),
     var(--bg-dark);
   background-attachment: fixed;
+  overscroll-behavior: none;
 }
 
 #root {
-  min-height: 100vh;
-  min-height: 100dvh;
+  height: 100%;
   display: flex;
   flex-direction: column;
 }

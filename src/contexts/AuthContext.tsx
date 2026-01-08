@@ -103,7 +103,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 .single()
 
             if (error) {
-                console.error('Error fetching profile:', error)
+                if (error.code === 'PGRST116') {
+                    console.warn('Perfil não encontrado, criando um novo...')
+                    // Tentar criar o perfil automaticamente se não existir
+                    const { data: { user } } = await supabase.auth.getUser()
+                    if (user) {
+                        const newProfile = {
+                            id: user.id,
+                            email: user.email,
+                            name: user.user_metadata?.name || user.email?.split('@')[0] || 'Usuário',
+                            points: 0,
+                            streak_days: 0,
+                            created_at: new Date().toISOString(),
+                            updated_at: new Date().toISOString()
+                        }
+
+                        const { error: insertError } = await supabase
+                            .from('users')
+                            .insert(newProfile)
+
+                        if (!insertError) {
+                            console.log('Perfil criado automaticamente!')
+                            setProfile(newProfile as User)
+                        } else {
+                            console.error('Erro ao criar perfil fallback:', insertError)
+                        }
+                    }
+                } else {
+                    console.error('Error fetching profile:', error)
+                }
             } else {
                 setProfile(data)
             }

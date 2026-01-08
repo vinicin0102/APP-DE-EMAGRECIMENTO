@@ -206,11 +206,11 @@ export default function AdminPanel() {
         try {
             setLoading(true)
             const [usersRes, postsRes, challengesRes, workoutsRes, plansRes] = await Promise.all([
-                supabase.from('users').select('*').order('created_at', { ascending: false }),
-                supabase.from('posts').select('*, user:users(*)').order('created_at', { ascending: false }),
+                supabase.from('users').select('*').order('created_at', { ascending: false }).limit(50),
+                supabase.from('posts').select('*, user:users(*)').order('created_at', { ascending: false }).limit(50),
                 supabase.from('challenges').select('*').order('created_at', { ascending: false }),
                 supabase.from('workouts').select('*').order('created_at', { ascending: false }),
-                supabase.from('individual_plans').select('*, user:users(*)').order('created_at', { ascending: false })
+                supabase.from('individual_plans').select('*, user:users(*)').order('created_at', { ascending: false }).limit(50)
             ])
             setUsers(usersRes.data || [])
             setPosts(postsRes.data || [])
