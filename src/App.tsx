@@ -1,23 +1,30 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense, useMemo } from 'react'
 import './App.css'
 import { useAuth } from './contexts/AuthContext'
 import { supabase } from './lib/supabase'
 
-// Components
-import AuthModal from './components/AuthModal'
-import BottomNav from './components/BottomNav'
-import Feed from './components/Feed'
-import MemberArea from './components/MemberArea'
-import ChallengesPage from './components/ChallengesPage'
-import ProgressTracker from './components/ProgressTracker'
-import ProfilePage from './components/ProfilePage'
-import Support from './components/Support'
-import AdminPanel from './components/AdminPanel'
-import { PWAInstallPrompt } from './components/PWAInstallPrompt'
-import AIAssistantsButton from './components/AIAssistantsButton'
-import { ReloadPrompt } from './components/ReloadPrompt'
+// Components - Lazy loading para melhor performance
+const AuthModal = lazy(() => import('./components/AuthModal'))
+const BottomNav = lazy(() => import('./components/BottomNav'))
+const Feed = lazy(() => import('./components/Feed'))
+const MemberArea = lazy(() => import('./components/MemberArea'))
+const ChallengesPage = lazy(() => import('./components/ChallengesPage'))
+const ProgressTracker = lazy(() => import('./components/ProgressTracker'))
+const ProfilePage = lazy(() => import('./components/ProfilePage'))
+const Support = lazy(() => import('./components/Support'))
+const AdminPanel = lazy(() => import('./components/AdminPanel'))
+const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').then(m => ({ default: m.PWAInstallPrompt })))
+const AIAssistantsButton = lazy(() => import('./components/AIAssistantsButton'))
+const ReloadPrompt = lazy(() => import('./components/ReloadPrompt').then(m => ({ default: m.ReloadPrompt })))
 
 const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com']
+
+// Loading component
+const TabLoader = () => (
+  <div className="tab-loading">
+    <div className="loader-spinner"></div>
+  </div>
+)
 
 function App() {
   const [activeTab, setActiveTab] = useState('feed')
@@ -25,11 +32,35 @@ function App() {
   const [hasPlanActive, setHasPlanActive] = useState(false)
   const { user, profile, loading } = useAuth()
 
-  // Verificar status do plano do usuário
+  // Cache para status do plano - evita refetch desnecessário
+  const planStatusCache = useMemo(() => {
+    const cached = sessionStorage.getItem('plan_status')
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached)
+        // Cache válido por 5 minutos
+        if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+          return parsed.hasPlanActive
+        }
+      } catch (e) {
+        // Ignore cache inválido
+      }
+    }
+    return null
+  }, [])
+
+  // Verificar status do plano do usuário - com cache
   useEffect(() => {
     const checkPlanStatus = async () => {
       if (!user) {
         setHasPlanActive(false)
+        sessionStorage.removeItem('plan_status')
+        return
+      }
+
+      // Usar cache se disponível
+      if (planStatusCache !== null) {
+        setHasPlanActive(planStatusCache)
         return
       }
 
@@ -44,12 +75,23 @@ function App() {
 
         if (error || !data) {
           setHasPlanActive(false)
+          sessionStorage.setItem('plan_status', JSON.stringify({ 
+            hasPlanActive: false, 
+            timestamp: Date.now() 
+          }))
           return
         }
 
         const expiresAt = new Date(data.expires_at)
         const now = new Date()
-        setHasPlanActive(expiresAt > now)
+        const isActive = expiresAt > now
+        setHasPlanActive(isActive)
+        
+        // Salvar no cache
+        sessionStorage.setItem('plan_status', JSON.stringify({ 
+          hasPlanActive: isActive, 
+          timestamp: Date.now() 
+        }))
       } catch (err) {
         console.error('Erro ao verificar plano:', err)
         setHasPlanActive(false)
@@ -57,15 +99,16 @@ function App() {
     }
 
     checkPlanStatus()
-  }, [user])
+  }, [user, planStatusCache])
 
   // Verifica admin na lista de emails permitidos
-  const userEmail = user?.email?.toLowerCase().trim()
-  const profileEmail = profile?.email?.toLowerCase().trim()
-
-  const isAdmin = ADMIN_EMAILS.some(email =>
-    email.toLowerCase() === userEmail || email.toLowerCase() === profileEmail
-  )
+  const isAdmin = useMemo(() => {
+    const userEmail = user?.email?.toLowerCase().trim()
+    const profileEmail = profile?.email?.toLowerCase().trim()
+    return ADMIN_EMAILS.some(email =>
+      email.toLowerCase() === userEmail || email.toLowerCase() === profileEmail
+    )
+  }, [user?.email, profile?.email])
 
   if (loading) {
     return (
@@ -232,8 +275,10 @@ function App() {
             </div>
           </div>
         </div>
-        <PWAInstallPrompt />
-        <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
+        <Suspense fallback={null}>
+          <PWAInstallPrompt />
+          <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
+        </Suspense>
       </div>
     )
   }
@@ -241,27 +286,65 @@ function App() {
   return (
     <div className="app">
       <main className="main-content">
-        {activeTab === 'feed' && <Feed />}
-        {activeTab === 'lessons' && (hasPlanActive ? <MemberArea /> : (
-          <div className="locked-content-screen">
-            <div className="locked-icon">🔒</div>
-            <h2>Conteúdo Exclusivo</h2>
-            <p>Esta área é exclusiva para assinantes do plano premium.</p>
-            <button className="btn-primary" onClick={() => setActiveTab('progress')}>
-              Quero Assinar Agora
-            </button>
-          </div>
-        ))}
-        {activeTab === 'progress' && <ProgressTracker />}
-        {activeTab === 'challenges' && <ChallengesPage />}
-        {activeTab === 'profile' && <ProfilePage />}
-        {activeTab === 'support' && <Support />}
-        {activeTab === 'admin' && <AdminPanel />}
-        {activeTab === 'progress' && hasPlanActive && <AIAssistantsButton />}
+        {/* Renderizar todos os componentes mas ocultar os inativos - evita desmontar/remontar */}
+        <div style={{ display: activeTab === 'feed' ? 'block' : 'none' }}>
+          <Suspense fallback={<TabLoader />}>
+            <Feed />
+          </Suspense>
+        </div>
+        
+        <div style={{ display: activeTab === 'lessons' ? 'block' : 'none' }}>
+          <Suspense fallback={<TabLoader />}>
+            {hasPlanActive ? <MemberArea /> : (
+              <div className="locked-content-screen">
+                <div className="locked-icon">🔒</div>
+                <h2>Conteúdo Exclusivo</h2>
+                <p>Esta área é exclusiva para assinantes do plano premium.</p>
+                <button className="btn-primary" onClick={() => setActiveTab('progress')}>
+                  Quero Assinar Agora
+                </button>
+              </div>
+            )}
+          </Suspense>
+        </div>
+        
+        <div style={{ display: activeTab === 'progress' ? 'block' : 'none' }}>
+          <Suspense fallback={<TabLoader />}>
+            <ProgressTracker />
+            {hasPlanActive && <AIAssistantsButton />}
+          </Suspense>
+        </div>
+        
+        <div style={{ display: activeTab === 'challenges' ? 'block' : 'none' }}>
+          <Suspense fallback={<TabLoader />}>
+            <ChallengesPage />
+          </Suspense>
+        </div>
+        
+        <div style={{ display: activeTab === 'profile' ? 'block' : 'none' }}>
+          <Suspense fallback={<TabLoader />}>
+            <ProfilePage />
+          </Suspense>
+        </div>
+        
+        <div style={{ display: activeTab === 'support' ? 'block' : 'none' }}>
+          <Suspense fallback={<TabLoader />}>
+            <Support />
+          </Suspense>
+        </div>
+        
+        <div style={{ display: activeTab === 'admin' ? 'block' : 'none' }}>
+          <Suspense fallback={<TabLoader />}>
+            <AdminPanel />
+          </Suspense>
+        </div>
       </main>
-      <PWAInstallPrompt />
-      <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
-      <ReloadPrompt />
+      
+      <Suspense fallback={null}>
+        <PWAInstallPrompt />
+        <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
+        <ReloadPrompt />
+      </Suspense>
     </div>
   )
 }

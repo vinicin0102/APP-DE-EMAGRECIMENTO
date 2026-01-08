@@ -1246,3 +1246,36 @@
     left: -80px;
   }
 }
+
+/* ================================================
+   TAB LOADING & PERFORMANCE OPTIMIZATIONS
+   ================================================ */
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.tab-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+  padding: 2rem;
+}
+
+.loader-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #ff4081;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Otimização: componentes ocultos não devem renderizar */
+.main-content > div[style*="display: none"] {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}

@@ -1,25 +1,36 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Post, User } from '../lib/supabase'
+
+// Cache simples em memória
+const postsCache = {
+  data: null as (Post & { user: User })[] | null,
+  timestamp: 0,
+  TTL: 30000 // 30 segundos
+}
 
 export function usePosts() {
     const [posts, setPosts] = useState<(Post & { user: User })[]>([])
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<Error | null>(null)
     const isMounted = useRef(true)
+    const channelRef = useRef<any>(null)
 
-    const fetchPosts = async (silent = false) => {
+    const fetchPosts = useCallback(async (silent = false) => {
         if (!isMounted.current) return
+
+        // Verificar cache primeiro
+        const now = Date.now()
+        if (postsCache.data && (now - postsCache.timestamp) < postsCache.TTL && !silent) {
+            setPosts(postsCache.data)
+            setLoading(false)
+            return
+        }
 
         try {
             if (!silent) setLoading(true)
 
-            // Criar timeout manual
-            const timeoutPromise = new Promise<null>((_, reject) => {
-                setTimeout(() => reject(new Error('Timeout')), 5000)
-            })
-
-            const queryPromise = supabase
+            const { data, error: queryError } = await supabase
                 .from('posts')
                 .select(`
                     *,
@@ -28,68 +39,67 @@ export function usePosts() {
                 .order('created_at', { ascending: false })
                 .limit(20)
 
-            const result = await Promise.race([queryPromise, timeoutPromise])
-
             if (!isMounted.current) return
-
-            if (result === null) {
-                // Timeout atingido
-                console.warn('Timeout ao buscar posts')
-                if (!silent) setPosts([])
-                return
-            }
-
-            const { data, error: queryError } = result as { data: (Post & { user: User })[] | null, error: Error | null }
 
             if (queryError) {
                 console.warn('Erro ao buscar posts:', queryError.message)
-                if (!silent) setPosts([])
+                if (!silent) {
+                    setPosts([])
+                    setError(queryError as Error)
+                }
             } else {
-                setPosts(data || [])
+                const postsData = data || []
+                setPosts(postsData)
+                // Atualizar cache
+                postsCache.data = postsData
+                postsCache.timestamp = Date.now()
             }
         } catch (err) {
             console.error('Erro ao buscar posts:', err)
             if (isMounted.current && !silent) {
                 setPosts([])
+                setError(err as Error)
             }
         } finally {
             if (isMounted.current && !silent) {
                 setLoading(false)
             }
         }
-    }
+    }, [])
 
     useEffect(() => {
         isMounted.current = true
         fetchPosts()
 
-        // Timeout de segurança - força loading false após 6 segundos
-        const safetyTimeout = setTimeout(() => {
-            if (isMounted.current) {
-                setLoading(false)
-            }
-        }, 6000)
-
-        // Subscribe to realtime updates
+        // Subscribe to realtime updates - com debounce
+        let updateTimeout: NodeJS.Timeout
         const channel = supabase
             .channel('posts-channel')
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'posts' },
                 () => {
-                    if (isMounted.current) {
-                        fetchPosts(true)
-                    }
+                    // Debounce: aguardar 1 segundo antes de atualizar
+                    clearTimeout(updateTimeout)
+                    updateTimeout = setTimeout(() => {
+                        if (isMounted.current) {
+                            fetchPosts(true) // Silent update
+                        }
+                    }, 1000)
                 }
             )
             .subscribe()
 
+        channelRef.current = channel
+
         return () => {
             isMounted.current = false
-            clearTimeout(safetyTimeout)
-            supabase.removeChannel(channel)
+            clearTimeout(updateTimeout)
+            if (channelRef.current) {
+                supabase.removeChannel(channelRef.current)
+            }
         }
-    }, [])
+    }, [fetchPosts])
 
     const createPost = async (content: string, imageUrl?: string) => {
         const { data: { user } } = await supabase.auth.getUser()
@@ -127,6 +137,8 @@ export function usePosts() {
 
             const newPost = { ...data, user: userFallback }
             setPosts(prev => [newPost, ...prev])
+            // Invalidar cache
+            postsCache.data = null
         }
 
         return { error: null }
@@ -153,6 +165,9 @@ export function usePosts() {
             await supabase.from('likes').insert({ user_id: user.id, post_id: postId })
             await supabase.rpc('increment_likes', { post_id: postId })
         }
+
+        // Invalidar cache
+        postsCache.data = null
 
         return { error: null }
     }

@@ -1,6 +1,13 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import type { Challenge, ChallengeParticipant } from '../lib/supabase'
+
+// Cache simples
+const challengesCache = {
+  data: null as Challenge[] | null,
+  timestamp: 0,
+  TTL: 60000 // 1 minuto
+}
 
 export function useChallenges() {
     const [challenges, setChallenges] = useState<Challenge[]>([])
@@ -9,12 +16,19 @@ export function useChallenges() {
     const [error, setError] = useState<Error | null>(null)
     const isMounted = useRef(true)
 
-    const fetchChallenges = async () => {
+    const fetchChallenges = useCallback(async () => {
         if (!isMounted.current) return
+
+        // Verificar cache
+        const now = Date.now()
+        if (challengesCache.data && (now - challengesCache.timestamp) < challengesCache.TTL) {
+            setChallenges(challengesCache.data)
+            setLoading(false)
+            return
+        }
 
         try {
             setLoading(true)
-            // Busca todos os desafios, ordenados por data de criação
             const { data, error: queryError } = await supabase
                 .from('challenges')
                 .select('*')
@@ -26,8 +40,11 @@ export function useChallenges() {
                 console.warn('Tabela challenges não encontrada ou erro:', queryError.message)
                 setChallenges([])
             } else {
-                console.log('Desafios carregados:', data?.length || 0, data)
-                setChallenges(data || [])
+                const challengesData = data || []
+                setChallenges(challengesData)
+                // Atualizar cache
+                challengesCache.data = challengesData
+                challengesCache.timestamp = Date.now()
             }
         } catch (err) {
             console.error('Erro ao buscar desafios:', err)
@@ -39,9 +56,9 @@ export function useChallenges() {
                 setLoading(false)
             }
         }
-    }
+    }, [])
 
-    const fetchUserChallenges = async () => {
+    const fetchUserChallenges = useCallback(async () => {
         if (!isMounted.current) return
 
         try {
@@ -67,7 +84,7 @@ export function useChallenges() {
                 setUserChallenges([])
             }
         }
-    }
+    }, [])
 
     useEffect(() => {
         isMounted.current = true
@@ -78,18 +95,10 @@ export function useChallenges() {
         }
         loadData()
 
-        // Timeout de segurança - força loading false após 6 segundos
-        const safetyTimeout = setTimeout(() => {
-            if (isMounted.current) {
-                setLoading(false)
-            }
-        }, 6000)
-
         return () => {
             isMounted.current = false
-            clearTimeout(safetyTimeout)
         }
-    }, [])
+    }, [fetchChallenges, fetchUserChallenges])
 
     const joinChallenge = async (challengeId: string) => {
         const { data: { user } } = await supabase.auth.getUser()
@@ -104,6 +113,8 @@ export function useChallenges() {
         if (!error) {
             await supabase.rpc('increment_participants', { challenge_id: challengeId })
             await fetchUserChallenges()
+            // Invalidar cache
+            challengesCache.data = null
         }
 
         return { error }
