@@ -25,17 +25,46 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
         try {
             if (mode === 'login') {
-                const { error } = await signIn(email, password)
-                if (error) throw error
+                console.log('🔐 Iniciando processo de login...')
+                const { error } = await signIn(email.trim(), password)
+                if (error) {
+                    console.error('❌ Erro no login:', error)
+                    // Mensagens de erro mais amigáveis
+                    let errorMessage = 'Erro ao fazer login'
+                    if (error.message.includes('Invalid login credentials')) {
+                        errorMessage = 'Email ou senha incorretos'
+                    } else if (error.message.includes('Email not confirmed')) {
+                        errorMessage = 'Por favor, confirme seu email antes de fazer login'
+                    } else if (error.message.includes('Too many requests')) {
+                        errorMessage = 'Muitas tentativas. Aguarde alguns minutos'
+                    } else {
+                        errorMessage = error.message || 'Erro ao fazer login'
+                    }
+                    throw new Error(errorMessage)
+                }
+                console.log('✅ Login bem-sucedido!')
             } else {
                 if (!name.trim()) {
                     throw new Error('Nome é obrigatório')
                 }
-                const { error } = await signUp(email, password, name)
-                if (error) throw error
+                const { error } = await signUp(email.trim(), password, name.trim())
+                if (error) {
+                    let errorMessage = 'Erro ao criar conta'
+                    if (error.message.includes('already registered')) {
+                        errorMessage = 'Este email já está cadastrado. Tente fazer login'
+                    } else if (error.message.includes('Password')) {
+                        errorMessage = 'A senha deve ter pelo menos 6 caracteres'
+                    } else {
+                        errorMessage = error.message || 'Erro ao criar conta'
+                    }
+                    throw new Error(errorMessage)
+                }
             }
+            // Aguardar um pouco para garantir que o estado foi atualizado
+            await new Promise(resolve => setTimeout(resolve, 500))
             onClose()
         } catch (err: any) {
+            console.error('❌ Erro no handleSubmit:', err)
             setError(err.message || 'Ocorreu um erro')
         } finally {
             setLoading(false)

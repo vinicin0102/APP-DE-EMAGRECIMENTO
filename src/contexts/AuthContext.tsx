@@ -96,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const fetchProfile = async (userId: string) => {
         try {
+            console.log('📋 Buscando perfil para user ID:', userId)
             const { data, error } = await supabase
                 .from('users')
                 .select('*')
@@ -104,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
             if (error) {
                 if (error.code === 'PGRST116') {
-                    console.warn('Perfil não encontrado, criando um novo...')
+                    console.warn('⚠️ Perfil não encontrado, criando um novo...')
                     // Tentar criar o perfil automaticamente se não existir
                     const { data: { user } } = await supabase.auth.getUser()
                     if (user) {
@@ -118,25 +119,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                             updated_at: new Date().toISOString()
                         }
 
-                        const { error: insertError } = await supabase
+                        console.log('💾 Criando perfil:', newProfile)
+                        const { data: insertedData, error: insertError } = await supabase
                             .from('users')
                             .insert(newProfile)
+                            .select()
+                            .single()
 
-                        if (!insertError) {
-                            console.log('Perfil criado automaticamente!')
-                            setProfile(newProfile as User)
+                        if (!insertError && insertedData) {
+                            console.log('✅ Perfil criado automaticamente!', insertedData)
+                            setProfile(insertedData as User)
                         } else {
-                            console.error('Erro ao criar perfil fallback:', insertError)
+                            console.error('❌ Erro ao criar perfil fallback:', insertError)
+                            // Mesmo com erro, criar perfil temporário para não bloquear login
+                            setProfile(newProfile as User)
                         }
                     }
                 } else {
-                    console.error('Error fetching profile:', error)
+                    console.error('❌ Error fetching profile:', error)
+                    // Não bloquear login mesmo se houver erro ao buscar perfil
                 }
             } else {
+                console.log('✅ Perfil encontrado:', data?.email)
                 setProfile(data)
             }
         } catch (error) {
-            console.error('Fetch profile error:', error)
+            console.error('❌ Fetch profile error:', error)
         } finally {
             // Marcar como completado para evitar que o timeout force loading=false novamente
             loadingCompleted.current = true
@@ -145,8 +153,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const signIn = async (email: string, password: string) => {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        return { error: error as Error | null }
+        try {
+            console.log('🔐 Tentando fazer login com:', email)
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+            
+            if (error) {
+                console.error('❌ Erro no login:', error.message, error)
+                return { error: error as Error }
+            }
+
+            if (data?.user) {
+                console.log('✅ Login bem-sucedido! User ID:', data.user.id)
+                // Garantir que o perfil existe após login
+                if (data.user) {
+                    await fetchProfile(data.user.id)
+                }
+            }
+
+            return { error: null }
+        } catch (err: any) {
+            console.error('❌ Erro inesperado no login:', err)
+            return { error: err as Error }
+        }
     }
 
     const signUp = async (email: string, password: string, name: string) => {

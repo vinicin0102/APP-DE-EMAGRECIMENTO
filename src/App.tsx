@@ -105,9 +105,21 @@ function App() {
   const isAdmin = useMemo(() => {
     const userEmail = user?.email?.toLowerCase().trim()
     const profileEmail = profile?.email?.toLowerCase().trim()
-    return ADMIN_EMAILS.some(email =>
+    const adminCheck = ADMIN_EMAILS.some(email =>
       email.toLowerCase() === userEmail || email.toLowerCase() === profileEmail
     )
+    
+    // Log para debug
+    if (user) {
+      console.log('🔍 Verificação de Admin:', {
+        userEmail,
+        profileEmail,
+        adminEmails: ADMIN_EMAILS,
+        isAdmin: adminCheck
+      })
+    }
+    
+    return adminCheck
   }, [user?.email, profile?.email])
 
   if (loading) {
