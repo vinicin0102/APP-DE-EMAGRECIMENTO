@@ -565,3 +565,42 @@
 .btn-activate:hover {
     transform: scale(1.05);
 }
+/* Add to ProgressTracker.css */
+.chart-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.chart-header-row h3 {
+    margin: 0;
+}
+
+.btn-add-weight-mini {
+    background: linear-gradient(135deg, #FF1493, #FF69B4);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 10px rgba(255, 20, 147, 0.3);
+    transition: transform 0.2s;
+}
+
+.btn-add-weight-mini:hover {
+    transform: scale(1.05);
+}
+
+.btn-primary {
+    background: #FF1493; 
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+}

@@ -61,7 +61,8 @@ export default function ProgressTracker() {
 
     const {
         logs: weightLogs,
-        loading: loadingWeight
+        loading: loadingWeight,
+        addLog
     } = useWeightLogs()
 
     const isMounted = useRef(true)
@@ -218,6 +219,11 @@ export default function ProgressTracker() {
                 await supabase
                     .from('individual_plans')
                     .insert(planData)
+            }
+
+            // Also log weight to history
+            if (peso) {
+                await addLog(parseFloat(peso));
             }
 
             window.open(PAYMENT_LINK, '_blank')
@@ -429,7 +435,22 @@ export default function ProgressTracker() {
                 {activeTab === 'evolution' && (
                     <div className="tab-pane fade-in">
                         <div className="chart-container">
-                            <h3>📉 Sua Evolução</h3>
+                            <div className="chart-header-row">
+                                <h3>📉 Sua Evolução</h3>
+                                <button
+                                    className="btn-add-weight-mini"
+                                    onClick={() => {
+                                        const newWeight = prompt('Qual seu peso atual? (kg)')
+                                        if (newWeight && !isNaN(parseFloat(newWeight))) {
+                                            addLog(parseFloat(newWeight))
+                                            setPeso(newWeight) // Update local state too
+                                        }
+                                    }}
+                                >
+                                    + Registrar Peso
+                                </button>
+                            </div>
+
                             {loadingWeight ? (
                                 <div className="loader-spinner"></div>
                             ) : weightLogs.length > 0 ? (
@@ -474,7 +495,17 @@ export default function ProgressTracker() {
                                 <div className="empty-state">
                                     <span className="empty-emoji">⚖️</span>
                                     <p>Ainda não temos registros suficientes.</p>
-                                    <p>Registre seu peso no Perfil regularmente para ver o gráfico ser construído!</p>
+                                    <button
+                                        className="btn-primary"
+                                        onClick={() => {
+                                            const newWeight = prompt('Qual seu peso atual? (kg)')
+                                            if (newWeight && !isNaN(parseFloat(newWeight))) {
+                                                addLog(parseFloat(newWeight))
+                                            }
+                                        }}
+                                    >
+                                        Registrar Primeiro Peso
+                                    </button>
                                 </div>
                             )}
                         </div>
