@@ -15,6 +15,7 @@ import Support from './components/Support'
 import AdminPanel from './components/AdminPanel'
 import { PWAInstallPrompt } from './components/PWAInstallPrompt'
 import AIAssistantsButton from './components/AIAssistantsButton'
+import { ReloadPrompt } from './components/ReloadPrompt'
 
 const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com']
 
@@ -260,6 +261,7 @@ function App() {
       </main>
       <PWAInstallPrompt />
       <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
+      <ReloadPrompt />
     </div>
   )
 }
