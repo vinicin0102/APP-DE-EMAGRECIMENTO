@@ -152,87 +152,74 @@ export default function MeuPlano() {
 
     return (
         <div className="meu-plano-page">
-            <header className="page-header">
-                <h1>Meu Plano</h1>
+            <header className="plano-page-header">
+                <div className="header-content">
+                    <h1>Meu Progresso</h1>
+                    <p className="header-subtitle">Acompanhe sua evolução diária</p>
+                </div>
             </header>
 
             <div className="page-container">
-                <div className="plan-form-container">
-                    {planStatus === 'active' && (
-                        <div className="active-plan-banner">
-                            <span className="icon">🏆</span>
-                            <div>
-                                <h4>Plano Ativo</h4>
-                                <p>Expira em {daysRemaining} dias</p>
-                            </div>
-                        </div>
-                    )}
-
-                    {planStatus === 'overdue' && (
-                        <div className="overdue-plan-banner">
-                            <span className="icon">⚠️</span>
-                            <div>
-                                <h4>Plano Expirado</h4>
-                                <p>Renove seu plano para continuar</p>
-                            </div>
-                        </div>
-                    )}
-
-                    <h3>{planStatus === 'none' ? 'Configurar Plano' : 'Atualizar Dados'}</h3>
+                <div className="plan-card-white">
+                    <button className="back-button-card" onClick={() => window.history.back()}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                    </button>
+                    
+                    <h2 className="plan-card-title">Plano Individual</h2>
+                    
+                    <p className="plan-description">
+                        Tenha um plano individual de treino e aulas personalizadas para alcançar seus resultados - atualiza mensalmente
+                    </p>
 
                     <div className="plan-form">
                         <div className="form-field">
-                            <label>Peso atual (kg)</label>
+                            <label>Peso</label>
                             <input 
                                 type="number" 
                                 step="0.1" 
                                 value={peso} 
                                 onChange={(e) => setPeso(e.target.value)} 
-                                placeholder="Ex: 65" 
+                                placeholder="" 
                             />
                         </div>
                         <div className="form-field">
-                            <label>Meta de peso (kg)</label>
+                            <label>Meta de peso</label>
                             <input 
                                 type="number" 
                                 step="0.1" 
                                 value={metaPeso} 
                                 onChange={(e) => setMetaPeso(e.target.value)} 
-                                placeholder="Ex: 58" 
+                                placeholder="" 
                             />
                         </div>
                         <div className="form-field">
-                            <label>Local de Treino</label>
+                            <label>Treina em casa ou academia</label>
                             <select value={localTreino} onChange={(e) => setLocalTreino(e.target.value)}>
                                 <option value="">Selecione...</option>
-                                <option value="casa">🏠 Casa</option>
-                                <option value="academia">🏋️ Academia</option>
-                                <option value="ambos">🔄 Ambos</option>
+                                <option value="casa">Casa</option>
+                                <option value="academia">Academia</option>
+                                <option value="ambos">Ambos</option>
                             </select>
                         </div>
                         <div className="form-field">
-                            <label>Altura (cm)</label>
+                            <label>Altura</label>
                             <input 
                                 type="number" 
                                 value={altura} 
                                 onChange={(e) => setAltura(e.target.value)} 
-                                placeholder="Ex: 165" 
+                                placeholder="" 
                             />
                         </div>
 
                         <button
-                            className="plan-btn primary"
+                            className="plan-cta-button"
                             onClick={handleSubmitPlan}
                             disabled={submitting}
                         >
-                            {submitting ? 'Salvando...' : '💾 Salvar e Atualizar'}
+                            {submitting ? 'Processando...' : 'Quero meu plano individual por apenas 29,90'}
                         </button>
-
-                        {planStatus === 'overdue' && (
-                            <button className="btn-renew" onClick={() => window.open(PAYMENT_LINK, '_blank')}>
-                                🔄 Renovar Plano
-                            </button>
-                        )}
                     </div>
                 </div>
             </div>
