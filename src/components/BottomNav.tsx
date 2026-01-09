@@ -31,6 +31,11 @@ const icons = {
             <polyline points="10,9 9,9 8,9" />
         </svg>
     ),
+    progress: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+        </svg>
+    ),
     challenges: (
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
@@ -59,7 +64,8 @@ export default function BottomNav({ activeTab, setActiveTab, isAdmin }: BottomNa
     const navItems = [
         { id: 'feed', label: 'Feed', icon: icons.feed },
         { id: 'lessons', label: 'Treinos', icon: icons.lessons },
-        { id: 'progress', label: 'Progresso', icon: icons.plans },
+        { id: 'plano', label: 'Meu Plano', icon: icons.plans },
+        { id: 'progress', label: 'Progresso', icon: icons.progress },
         { id: 'challenges', label: 'Desafios', icon: icons.challenges },
         { id: 'profile', label: 'Perfil', icon: icons.profile },
     ]

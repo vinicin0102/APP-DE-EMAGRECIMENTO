@@ -10,6 +10,7 @@ const Feed = lazy(() => import('./components/Feed'))
 const MemberArea = lazy(() => import('./components/MemberArea'))
 const ChallengesPage = lazy(() => import('./components/ChallengesPage'))
 const ProgressTracker = lazy(() => import('./components/ProgressTracker'))
+const MeuPlano = lazy(() => import('./components/MeuPlano'))
 const ProfilePage = lazy(() => import('./components/ProfilePage'))
 const Support = lazy(() => import('./components/Support'))
 const AdminPanel = lazy(() => import('./components/AdminPanel'))
@@ -317,6 +318,12 @@ function App() {
                 </button>
               </div>
             )}
+          </Suspense>
+        </div>
+        
+        <div style={{ display: activeTab === 'plano' ? 'block' : 'none' }}>
+          <Suspense fallback={<TabLoader />}>
+            <MeuPlano />
           </Suspense>
         </div>
         
