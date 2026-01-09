@@ -3,20 +3,20 @@ import './App.css'
 import { useAuth } from './contexts/AuthContext'
 import { supabase } from './lib/supabase'
 
-// Components - Lazy loading para melhor performance
-const AuthModal = lazy(() => import('./components/AuthModal'))
-const BottomNav = lazy(() => import('./components/BottomNav'))
-const Feed = lazy(() => import('./components/Feed'))
-const MemberArea = lazy(() => import('./components/MemberArea'))
-const ChallengesPage = lazy(() => import('./components/ChallengesPage'))
-const ProgressTracker = lazy(() => import('./components/ProgressTracker'))
-const MeuPlano = lazy(() => import('./components/MeuPlano'))
-const ProfilePage = lazy(() => import('./components/ProfilePage'))
-const Support = lazy(() => import('./components/Support'))
-const AdminPanel = lazy(() => import('./components/AdminPanel'))
-const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').then(m => ({ default: m.PWAInstallPrompt })))
-const AIAssistantsButton = lazy(() => import('./components/AIAssistantsButton'))
-const ReloadPrompt = lazy(() => import('./components/ReloadPrompt').then(m => ({ default: m.ReloadPrompt })))
+// Components - Lazy loading para melhor performance (com tratamento de erro)
+const AuthModal = lazy(() => import('./components/AuthModal').catch(() => ({ default: () => <div>Erro ao carregar</div> })))
+const BottomNav = lazy(() => import('./components/BottomNav').catch(() => ({ default: () => <div>Erro ao carregar</div> })))
+const Feed = lazy(() => import('./components/Feed').catch(() => ({ default: () => <div>Erro ao carregar Feed</div> })))
+const MemberArea = lazy(() => import('./components/MemberArea').catch(() => ({ default: () => <div>Erro ao carregar Área de Membros</div> })))
+const ChallengesPage = lazy(() => import('./components/ChallengesPage').catch(() => ({ default: () => <div>Erro ao carregar Desafios</div> })))
+const ProgressTracker = lazy(() => import('./components/ProgressTracker').catch(() => ({ default: () => <div>Erro ao carregar Progresso</div> })))
+const MeuPlano = lazy(() => import('./components/MeuPlano').catch(() => ({ default: () => <div>Erro ao carregar Meu Plano</div> })))
+const ProfilePage = lazy(() => import('./components/ProfilePage').catch(() => ({ default: () => <div>Erro ao carregar Perfil</div> })))
+const Support = lazy(() => import('./components/Support').catch(() => ({ default: () => <div>Erro ao carregar Suporte</div> })))
+const AdminPanel = lazy(() => import('./components/AdminPanel').catch(() => ({ default: () => <div>Erro ao carregar Admin</div> })))
+const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').then(m => ({ default: m.PWAInstallPrompt })).catch(() => ({ default: () => null })))
+const AIAssistantsButton = lazy(() => import('./components/AIAssistantsButton').catch(() => ({ default: () => null })))
+const ReloadPrompt = lazy(() => import('./components/ReloadPrompt').then(m => ({ default: m.ReloadPrompt })).catch(() => ({ default: () => null })))
 
 const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com']
 
@@ -33,24 +33,7 @@ function App() {
   const [hasPlanActive, setHasPlanActive] = useState(false)
   const { user, profile, loading } = useAuth()
 
-  // Cache para status do plano - evita refetch desnecessário
-  const planStatusCache = useMemo(() => {
-    const cached = sessionStorage.getItem('plan_status')
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached)
-        // Cache válido por 5 minutos
-        if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
-          return parsed.hasPlanActive
-        }
-      } catch (e) {
-        // Ignore cache inválido
-      }
-    }
-    return null
-  }, [])
-
-  // Verificar status do plano do usuário - com cache
+  // Verificar status do plano do usuário - com cache (CORRIGIDO: removido loop infinito)
   useEffect(() => {
     const checkPlanStatus = async () => {
       if (!user) {
@@ -59,10 +42,19 @@ function App() {
         return
       }
 
-      // Usar cache se disponível
-      if (planStatusCache !== null) {
-        setHasPlanActive(planStatusCache)
-        return
+      // Verificar cache primeiro
+      const cached = sessionStorage.getItem('plan_status')
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached)
+          // Cache válido por 5 minutos
+          if (Date.now() - parsed.timestamp < 5 * 60 * 1000) {
+            setHasPlanActive(parsed.hasPlanActive)
+            return
+          }
+        } catch (e) {
+          // Ignore cache inválido
+        }
       }
 
       try {
@@ -100,7 +92,7 @@ function App() {
     }
 
     checkPlanStatus()
-  }, [user, planStatusCache])
+  }, [user]) // CORRIGIDO: removido planStatusCache da dependência para evitar loop infinito
 
   // Verifica admin na lista de emails permitidos
   const isAdmin = useMemo(() => {

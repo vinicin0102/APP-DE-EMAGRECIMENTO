@@ -98,7 +98,7 @@ export function useChallenges() {
         return () => {
             isMounted.current = false
         }
-    }, [fetchChallenges, fetchUserChallenges])
+    }, []) // CORRIGIDO: removido callbacks da dependência para evitar re-renders infinitos
 
     const joinChallenge = async (challengeId: string) => {
         const { data: { user } } = await supabase.auth.getUser()

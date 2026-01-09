@@ -99,7 +99,7 @@ export function usePosts() {
                 supabase.removeChannel(channelRef.current)
             }
         }
-    }, [fetchPosts])
+    }, []) // CORRIGIDO: removido fetchPosts da dependência para evitar re-renders infinitos
 
     const createPost = async (content: string, imageUrl?: string) => {
         const { data: { user } } = await supabase.auth.getUser()

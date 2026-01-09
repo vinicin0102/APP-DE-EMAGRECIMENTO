@@ -27,14 +27,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         let mounted = true
         loadingCompleted.current = false
 
-        // Timeout de segurança - 3 segundos máximo
+        // Timeout de segurança - 10 segundos máximo (aumentado para desktop)
         const timeout = setTimeout(() => {
             if (mounted && !loadingCompleted.current) {
                 console.log('Auth timeout - forcing load complete')
                 loadingCompleted.current = true
                 setLoading(false)
             }
-        }, 3000)
+        }, 10000) // CORRIGIDO: aumentado de 3s para 10s para evitar timeout prematuro no desktop
 
         const completeLoading = () => {
             if (!loadingCompleted.current) {
