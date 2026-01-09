@@ -14,9 +14,9 @@ const MeuPlano = lazy(() => import('./components/MeuPlano').catch(() => ({ defau
 const ProfilePage = lazy(() => import('./components/ProfilePage').catch(() => ({ default: () => <div>Erro ao carregar Perfil</div> })))
 const Support = lazy(() => import('./components/Support').catch(() => ({ default: () => <div>Erro ao carregar Suporte</div> })))
 const AdminPanel = lazy(() => import('./components/AdminPanel').catch(() => ({ default: () => <div>Erro ao carregar Admin</div> })))
-const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').then(m => ({ default: m.PWAInstallPrompt })).catch(() => ({ default: () => null })))
-const AIAssistantsButton = lazy(() => import('./components/AIAssistantsButton').catch(() => ({ default: () => null })))
-const ReloadPrompt = lazy(() => import('./components/ReloadPrompt').then(m => ({ default: m.ReloadPrompt })).catch(() => ({ default: () => null })))
+const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').then(m => ({ default: m.PWAInstallPrompt })).catch(() => ({ default: () => <></> })))
+const AIAssistantsButton = lazy(() => import('./components/AIAssistantsButton').catch(() => ({ default: () => <></> })))
+const ReloadPrompt = lazy(() => import('./components/ReloadPrompt').then(m => ({ default: m.ReloadPrompt })).catch(() => ({ default: () => <></> })))
 
 const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com']
 
