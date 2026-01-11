@@ -18,7 +18,7 @@ const PWAInstallPrompt = lazy(() => import('./components/PWAInstallPrompt').then
 const AIAssistantsButton = lazy(() => import('./components/AIAssistantsButton').catch(() => ({ default: () => <></> })))
 const ReloadPrompt = lazy(() => import('./components/ReloadPrompt').then(m => ({ default: m.ReloadPrompt })).catch(() => ({ default: () => <></> })))
 
-const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com']
+const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com', 'auxiliodp1@gmail.com']
 
 // Loading component
 const TabLoader = () => (
@@ -68,9 +68,9 @@ function App() {
 
         if (error || !data) {
           setHasPlanActive(false)
-          sessionStorage.setItem('plan_status', JSON.stringify({ 
-            hasPlanActive: false, 
-            timestamp: Date.now() 
+          sessionStorage.setItem('plan_status', JSON.stringify({
+            hasPlanActive: false,
+            timestamp: Date.now()
           }))
           return
         }
@@ -79,11 +79,11 @@ function App() {
         const now = new Date()
         const isActive = expiresAt > now
         setHasPlanActive(isActive)
-        
+
         // Salvar no cache
-        sessionStorage.setItem('plan_status', JSON.stringify({ 
-          hasPlanActive: isActive, 
-          timestamp: Date.now() 
+        sessionStorage.setItem('plan_status', JSON.stringify({
+          hasPlanActive: isActive,
+          timestamp: Date.now()
         }))
       } catch (err) {
         console.error('Erro ao verificar plano:', err)
@@ -101,7 +101,7 @@ function App() {
     const adminCheck = ADMIN_EMAILS.some(email =>
       email.toLowerCase() === userEmail || email.toLowerCase() === profileEmail
     )
-    
+
     // Log para debug
     if (user) {
       console.log('🔍 Verificação de Admin:', {
@@ -111,7 +111,7 @@ function App() {
         isAdmin: adminCheck
       })
     }
-    
+
     return adminCheck
   }, [user?.email, profile?.email])
 
@@ -297,7 +297,7 @@ function App() {
             <Feed />
           </Suspense>
         </div>
-        
+
         <div style={{ display: activeTab === 'lessons' ? 'block' : 'none' }}>
           <Suspense fallback={<TabLoader />}>
             {hasPlanActive ? <MemberArea /> : (
@@ -312,45 +312,45 @@ function App() {
             )}
           </Suspense>
         </div>
-        
+
         <div style={{ display: activeTab === 'plano' ? 'block' : 'none' }}>
           <Suspense fallback={<TabLoader />}>
             <MeuPlano />
           </Suspense>
         </div>
-        
+
         <div style={{ display: activeTab === 'progress' ? 'block' : 'none' }}>
           <Suspense fallback={<TabLoader />}>
             <ProgressTracker />
             {hasPlanActive && <AIAssistantsButton />}
           </Suspense>
         </div>
-        
+
         <div style={{ display: activeTab === 'challenges' ? 'block' : 'none' }}>
           <Suspense fallback={<TabLoader />}>
             <ChallengesPage />
           </Suspense>
         </div>
-        
+
         <div style={{ display: activeTab === 'profile' ? 'block' : 'none' }}>
           <Suspense fallback={<TabLoader />}>
             <ProfilePage />
           </Suspense>
         </div>
-        
+
         <div style={{ display: activeTab === 'support' ? 'block' : 'none' }}>
           <Suspense fallback={<TabLoader />}>
             <Support />
           </Suspense>
         </div>
-        
+
         <div style={{ display: activeTab === 'admin' ? 'block' : 'none' }}>
           <Suspense fallback={<TabLoader />}>
             <AdminPanel />
           </Suspense>
         </div>
       </main>
-      
+
       <Suspense fallback={null}>
         <PWAInstallPrompt />
         <BottomNav activeTab={activeTab} setActiveTab={setActiveTab} isAdmin={isAdmin} />
