@@ -9,7 +9,7 @@ interface AuthContextType {
     session: Session | null
     loading: boolean
     signIn: (email: string, password: string) => Promise<{ error: Error | null }>
-    signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>
+    signUp: (email: string, password: string, name: string, phone: string) => Promise<{ error: Error | null }>
     signOut: () => Promise<void>
     updateProfile: (updates: Partial<User>) => Promise<{ error: Error | null }>
 }
@@ -156,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
             console.log('🔐 Tentando fazer login com:', email)
             const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-            
+
             if (error) {
                 console.error('❌ Erro no login:', error.message, error)
                 return { error: error as Error }
@@ -177,12 +177,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    const signUp = async (email: string, password: string, name: string) => {
+    const signUp = async (email: string, password: string, name: string, phone: string) => {
         const { data, error } = await supabase.auth.signUp({
             email,
             password,
             options: {
-                data: { name }
+                data: { name, phone }
             }
         })
 
@@ -192,6 +192,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     id: data.user.id,
                     email,
                     name,
+                    phone,
                     points: 0,
                     streak_days: 0
                 })

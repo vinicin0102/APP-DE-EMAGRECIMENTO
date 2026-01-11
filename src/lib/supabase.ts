@@ -9,6 +9,7 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 export interface User {
     id: string
     email: string
+    phone?: string
     name: string
     avatar_url?: string
     weight_goal?: number

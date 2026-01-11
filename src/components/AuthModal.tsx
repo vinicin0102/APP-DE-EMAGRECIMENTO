@@ -12,6 +12,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [name, setName] = useState('')
+    const [phone, setPhone] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
     const { signIn, signUp } = useAuth()
@@ -47,7 +48,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 if (!name.trim()) {
                     throw new Error('Nome é obrigatório')
                 }
-                const { error } = await signUp(email.trim(), password, name.trim())
+                if (!phone.trim()) {
+                    throw new Error('Celular é obrigatório')
+                }
+                const { error } = await signUp(email.trim(), password, name.trim(), phone.trim())
                 if (error) {
                     let errorMessage = 'Erro ao criar conta'
                     if (error.message.includes('already registered')) {
@@ -89,16 +93,28 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
                 <form onSubmit={handleSubmit} className="auth-form">
                     {mode === 'signup' && (
-                        <div className="form-group">
-                            <label htmlFor="name">Nome</label>
-                            <input
-                                id="name"
-                                type="text"
-                                placeholder="Seu nome"
-                                value={name}
-                                onChange={e => setName(e.target.value)}
-                            />
-                        </div>
+                        <>
+                            <div className="form-group">
+                                <label htmlFor="name">Nome</label>
+                                <input
+                                    id="name"
+                                    type="text"
+                                    placeholder="Seu nome"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label htmlFor="phone">Celular</label>
+                                <input
+                                    id="phone"
+                                    type="tel"
+                                    placeholder="(11) 99999-9999"
+                                    value={phone}
+                                    onChange={e => setPhone(e.target.value)}
+                                />
+                            </div>
+                        </>
                     )}
 
                     <div className="form-group">

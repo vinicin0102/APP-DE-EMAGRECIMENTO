@@ -5,7 +5,7 @@ import type { User, Post, Challenge } from '../lib/supabase'
 import './AdminPanel.css'
 import PaymentsPage from './PaymentsPage'
 
-const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com']
+const ADMIN_EMAILS = ['admin@gmail.com', 'vv9250400@gmail.com', 'auxiliodp1@gmail.com']
 
 // Interfaces
 interface Lesson {
@@ -809,6 +809,35 @@ export default function AdminPanel() {
         addLog(`Exportou dados: ${type}`)
     }
 
+    // Exportar usuários para CSV (planilha) com email e celular
+    const exportUsersToCSV = () => {
+        const headers = ['Nome', 'Email', 'Celular', 'Pontos', 'Streak', 'Data de Cadastro']
+        const rows = users.map(user => [
+            user.name || '',
+            user.email || '',
+            (user as any).phone || '',
+            user.points?.toString() || '0',
+            user.streak_days?.toString() || '0',
+            user.created_at ? new Date(user.created_at).toLocaleDateString('pt-BR') : ''
+        ])
+
+        const csvContent = [
+            headers.join(';'),
+            ...rows.map(row => row.map(cell => `"${cell}"`).join(';'))
+        ].join('\n')
+
+        const BOM = '\uFEFF'
+        const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `usuarios_${new Date().toISOString().split('T')[0]}.csv`
+        a.click()
+        URL.revokeObjectURL(url)
+        addLog('Exportou usuários para planilha CSV')
+        alert('✅ Planilha exportada com sucesso! Abra o arquivo .csv no Excel ou Google Sheets.')
+    }
+
     // Stats
     const totalLessons = modules.reduce((acc, m) => acc + m.lessons.length, 0)
     const stats = {
@@ -972,7 +1001,7 @@ export default function AdminPanel() {
                                             onChange={e => setSearchTerm(e.target.value)}
                                             className="search-input"
                                         />
-                                        <button className="btn-export" onClick={() => exportData('users')}>📥 Exportar</button>
+                                        <button className="btn-export" onClick={() => exportUsersToCSV()}>📥 Exportar Planilha</button>
                                     </div>
                                 </div>
                                 <div className="admin-table-container">
@@ -981,6 +1010,7 @@ export default function AdminPanel() {
                                             <tr>
                                                 <th>Nome</th>
                                                 <th>Email</th>
+                                                <th>Celular</th>
                                                 <th>Status</th>
                                                 <th>Pontos</th>
                                                 <th>Streak</th>
@@ -1004,6 +1034,7 @@ export default function AdminPanel() {
                                                             {isMuted && !isBanned && <span className="status-badge muted">🔇</span>}
                                                         </td>
                                                         <td className="email-cell">{user.email}</td>
+                                                        <td className="phone-cell">{(user as any).phone || '-'}</td>
                                                         <td>
                                                             {isBanned ? (
                                                                 <span className="badge status-banned">Banido</span>
