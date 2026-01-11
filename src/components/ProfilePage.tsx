@@ -142,29 +142,24 @@ export default function ProfilePage() {
     const handleSignOut = async () => {
         if (!window.confirm('Tem certeza que deseja sair?')) return
 
-        try {
-            console.log('Iniciando logout...')
+        console.log('Iniciando logout...')
 
-            // 1. Tentar logout normal do Supabase
-            await signOut().catch(err => {
-                console.warn('Erro no signOut do Supabase (ignorado):', err)
-            })
+        // 1. Limpar dados locais IMEDIATAMENTE (não esperar Supabase)
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('sb-') || key.includes('supabase')) {
+                localStorage.removeItem(key)
+            }
+        })
 
-            // 2. Forçar limpeza do LocalStorage relacionado ao Supabase
-            Object.keys(localStorage).forEach(key => {
-                if (key.startsWith('sb-') || key.includes('supabase')) {
-                    localStorage.removeItem(key)
-                }
-            })
+        // 2. Chamar signOut sem await (em background)
+        signOut().catch(err => {
+            console.warn('Erro no signOut (ignorado):', err)
+        })
 
-            console.log('Dados locais limpos. Recarregando...')
+        console.log('Dados locais limpos. Redirecionando...')
 
-        } catch (error) {
-            console.error('Erro geral ao sair:', error)
-        } finally {
-            // 3. Forçar recarregamento absoluto para a raiz
-            window.location.href = '/'
-        }
+        // 3. Redirecionar imediatamente (não esperar nada)
+        window.location.href = '/'
     }
 
     return (
