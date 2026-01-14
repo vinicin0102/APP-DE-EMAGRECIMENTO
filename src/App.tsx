@@ -153,7 +153,7 @@ function App() {
               <h1 className="welcome-title">
                 Clube das <span className="gradient-text">Musas</span>
               </h1>
-              <p className="welcome-subtitle">Onde Mães Viram Musas</p>
+              <p className="welcome-subtitle">Onde Mulheres Viram Musas</p>
 
               <div className="welcome-features">
                 <div className="welcome-feature">
@@ -174,7 +174,7 @@ function App() {
                   <div className="feature-icon">💪</div>
                   <div className="feature-content">
                     <span className="feature-title">Planos Seguros & Personalizados</span>
-                    <span className="feature-desc">Treinos e dietas pensadas para mães</span>
+                    <span className="feature-desc">Treinos e dietas pensadas para mulheres</span>
                   </div>
                 </div>
                 <div className="welcome-feature">
