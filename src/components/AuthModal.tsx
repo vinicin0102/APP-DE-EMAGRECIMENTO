@@ -10,7 +10,9 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     const [mode, setMode] = useState<'login' | 'signup'>('login')
     const [email, setEmail] = useState('')
+    const [confirmEmail, setConfirmEmail] = useState('')
     const [password, setPassword] = useState('')
+    const [confirmPassword, setConfirmPassword] = useState('')
     const [name, setName] = useState('')
     const [phone, setPhone] = useState('')
     const [error, setError] = useState('')
@@ -51,6 +53,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 if (!phone.trim()) {
                     throw new Error('Celular é obrigatório')
                 }
+                if (email.trim() !== confirmEmail.trim()) {
+                    throw new Error('Os emails não conferem')
+                }
+                if (password !== confirmPassword) {
+                    throw new Error('As senhas não conferem')
+                }
+
                 const { error } = await signUp(email.trim(), password, name.trim(), phone.trim())
                 if (error) {
                     let errorMessage = 'Erro ao criar conta'
@@ -129,6 +138,20 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         />
                     </div>
 
+                    {mode === 'signup' && (
+                        <div className="form-group">
+                            <label htmlFor="confirmEmail">Confirmar Email</label>
+                            <input
+                                id="confirmEmail"
+                                type="email"
+                                placeholder="Confirme seu email"
+                                value={confirmEmail}
+                                onChange={e => setConfirmEmail(e.target.value)}
+                                required
+                            />
+                        </div>
+                    )}
+
                     <div className="form-group">
                         <label htmlFor="password">Senha</label>
                         <input
@@ -141,6 +164,21 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                             minLength={6}
                         />
                     </div>
+
+                    {mode === 'signup' && (
+                        <div className="form-group">
+                            <label htmlFor="confirmPassword">Confirmar Senha</label>
+                            <input
+                                id="confirmPassword"
+                                type="password"
+                                placeholder="Confirme sua senha"
+                                value={confirmPassword}
+                                onChange={e => setConfirmPassword(e.target.value)}
+                                required
+                                minLength={6}
+                            />
+                        </div>
+                    )}
 
                     {error && <div className="error-message">{error}</div>}
 
